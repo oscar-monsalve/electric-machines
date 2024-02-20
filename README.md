@@ -1,6 +1,6 @@
 # Electric machines exercises
 
-Electric machine exercises for the ITM subject "Electric Machines II" from "Máquina Eléctricas Ed. 5", Chapman.
+Electric machine exercises for the ITM subject "Electric Machines II" from the book "Máquina Eléctricas Ed. 5", Chapman.
 
 ## Exercise 1-1
 
@@ -21,4 +21,4 @@ ponga que el efecto marginal en el entrehierro incrementa 5% la sección transve
 rro. Dada esta información, encuentre a) la reluctancia total del camino del flujo (hierro más entrehierro)
 y b) la corriente requerida para producir una densidad de flujo de 0.5 T en el entrehierro.
 
-<img src="images/ex1_2.png" alt="Exercise 1-1" width="400" height="auto"/>
+<img src="images/ex1_2.png" alt="Exercise 1-2" width="400" height="auto"/>

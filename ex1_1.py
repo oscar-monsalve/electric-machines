@@ -1,4 +1,5 @@
 """
+Ejercicio 1-1
 En la figura 1-7a) se observa un núcleo ferromagnético. Tres lados de este núcleo tienen una anchura
 uniforme, mientras que el cuarto es un poco más delgado. La profundidad del núcleo visto es de 10 cm
 (hacia dentro de la página), mientras que las demás dimensiones se muestran en la figura. Hay una bobina
