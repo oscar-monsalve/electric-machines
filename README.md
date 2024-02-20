@@ -1,6 +1,6 @@
 # Electric machines exercises
 
-A compilation of electric machine exercises for the ITM subject "Electric Machines II" from Chapman.
+Electric machine exercises for the ITM subject "Electric Machines II" from "Máquina Eléctricas Ed. 5", Chapman.
 
 ## Exercise 1-1
 
