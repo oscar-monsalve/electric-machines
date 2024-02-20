@@ -9,4 +9,6 @@ uniforme, mientras que el cuarto es un poco más delgado. La profundidad del nú
 (hacia dentro de la página), mientras que las demás dimensiones se muestran en la figura. Hay una bobina
 de 200 vueltas enrollada sobre el lado izquierdo del núcleo. Si la permeabilidad relativa mr es de 2 500,
 ¿qué cantidad de flujo producirá una corriente de 1 A en la bobina?
+
+![[Ex1-1.png|500]]
 ![Exercise 1-1](/home/om/vaults/personal/Ex1-1.png)
