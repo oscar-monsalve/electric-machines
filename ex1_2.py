@@ -28,7 +28,6 @@ a_eh = 0.0012 * 1.05  # Marginal effect of 5% included to the core area
 # Magnetic flux required at entrehierro (Wb/m^2)
 b_eh = 0.5
 
-
 # Solution for literal a)
 r_n = l_n / (a_n * u_r * u_0)  # Core reluctance
 r_eh = l_eh / (a_eh * u_0)  # Entrehierro reluctance
