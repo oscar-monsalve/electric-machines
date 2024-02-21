@@ -23,7 +23,7 @@ y b) la corriente requerida para producir una densidad de flujo de 0.5 T en el e
 
 <img src="images/ex1_2.png" alt="Exercise 1-2" width="400" height="auto"/>
 
-## Exercise 1-2
+## Exercise 1-3
 
 La figura 1-9a) muestra un rotor y un estator sencillos de un motor de cd. La longitud media del recorrido
 del fl ujo en el estator es de 50 cm, y el área de su sección transversal es de 12 cm2. La longitud media
