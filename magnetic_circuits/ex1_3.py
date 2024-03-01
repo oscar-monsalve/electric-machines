@@ -8,28 +8,7 @@ vueltas alrededor del núcleo. Si la corriente en el alambre se ajusta a l A, ¿
 resultante en el entrehierro?
 """
 
-import numpy as np
-
-
-def calculate_reluctance(length, relative_permeability, area, vacuum_permeability=4*np.pi*10**-7):
-    """
-    Calculates the magnetic reluctance in (H/m)
-    """
-    return length / (vacuum_permeability * relative_permeability * area)
-
-
-def calculate_flux(turns, current, eq_reluctance):
-    """
-    Calculates the magnetic flux in (Wb)
-    """
-    return (turns * current) / (eq_reluctance)
-
-
-def calculate_flux_density(flux, area):
-    """
-    Calculates the flux density in (Wb/m^2) or (T)
-    """
-    return flux / area
+import functions as fn
 
 
 # Exercise data
@@ -52,15 +31,15 @@ muh_a = 1  # Air
 
 # Solution
 # Relucatances
-r_n = calculate_reluctance(l_n, muh_r, a_n)  # Core
-r_r = calculate_reluctance(l_r, muh_r, a_n)  # Rotor
-r_eh = calculate_reluctance(l_eh, muh_a, a_eh)  # Air gap
+r_n = fn.calculate_reluctance(l_n, muh_r, a_n)  # Core
+r_r = fn.calculate_reluctance(l_r, muh_r, a_n)  # Rotor
+r_eh = fn.calculate_reluctance(l_eh, muh_a, a_eh)  # Air gap
 r_eq = r_n + r_r + (2 * r_eh)
 
 # Equivalent flux
-eq_flux = calculate_flux(N, i, r_eq)
+eq_flux = fn.calculate_flux(N, i, r_eq)
 
 # Flux density at air gap
-b_eh = calculate_flux_density(eq_flux, a_eh)
+b_eh = fn.calculate_flux_density(eq_flux, a_eh)
 
 print(f"The flux density at the air gap is B_eh: {b_eh} T")
