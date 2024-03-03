@@ -72,7 +72,7 @@ $n_r=(1-s)n_g$
 
 $I_r=V_F/Z$
 
-$P_sal=I_r^2R_2/s$
+$P_{sal}=I_r^2R_2/s$
 
 $P=T\omega$
 
