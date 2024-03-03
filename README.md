@@ -47,12 +47,9 @@ resultante en el entrehierro?
 Se tiene un motor de inducción trifásico con conexión en estrella de 5 hp, 60 Hz, 1800 rpm y 440V con los
 siguientes parámetros:
 
-$r_1 = 1.5\; \Omega
-r_2 = 1.2\; \Omega
-
-jX = 6\; \Omega (total)
-jX_m = 110\; \Omega
-
-R_m = 900\; \Omega
-
-s = 0.2$
+$r_1 = 1.5\; \Omega$
+$r_2 = 1.2\; \Omega$
+$jX = 6\; \Omega$ (total)
+$jX_m = 110\; \Omega$
+$R_m = 900\; \Omega$
+$s = 0.2$
