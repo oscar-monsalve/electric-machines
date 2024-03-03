@@ -54,3 +54,11 @@ $jX = 6\\; \Omega\\; (total),\\; jX_m = 110\\; \Omega$
 $R_m = 900\\; \Omega$
 
 $s = 0.2$
+
+Calcular:
+
+a) Velocidad del rotor\
+b) corriente del motor\
+c) Potencia del rotor\
+d) Torque de salida\
+e) eficiencia del motor\
