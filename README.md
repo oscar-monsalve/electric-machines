@@ -55,13 +55,6 @@ $R_m = 900\\; \Omega$
 
 $s = 0.2$
 
-Ecuaciones útiles:
-
-$n_r=(1-s)n_g$
-$I_r=V_F/Z$
-$P_sal=I_r^2R_2/s$
-$P=T\omega$
-$P_{en}=3V_FI_{en}\cos(\theta)$
 
 Calcular:
 
@@ -71,4 +64,12 @@ c) Potencia del rotor\
 d) Torque de salida\
 e) eficiencia del motor\
 
-<img src="images/motor_1.png" alt="Exercise 1-2" width="400" height="auto"/>
+<img src="images/motor_1.png" alt="Exercise 1-2" width="600" height="auto"/>
+
+Ecuaciones útiles:
+
+$n_r=(1-s)n_g$
+$I_r=V_F/Z$
+$P_sal=I_r^2R_2/s$
+$P=T\omega$
+$P_{en}=3V_FI_{en}\cos(\theta)$
