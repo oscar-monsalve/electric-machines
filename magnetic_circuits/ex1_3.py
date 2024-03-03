@@ -10,7 +10,6 @@ resultante en el entrehierro?
 
 import functions as fn
 
-
 # Exercise data
 # Lengths in (m)
 l_n = 0.5  # Core
