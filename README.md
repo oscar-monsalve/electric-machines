@@ -62,7 +62,9 @@ a) Velocidad del rotor\
 b) corriente del motor\
 c) Potencia del rotor\
 d) Torque de salida\
-e) eficiencia del motor\
+e) Eficiencia del motor\
+f) Calcular la eficiencia para un deslizamiento de $s=0.3$
+g) Calcular la eficiencia para un deslizamiento de $s=0.1$
 
 <img src="images/motor_1.png" alt="Exercise 1-2" width="600" height="auto"/>
 
