@@ -49,7 +49,6 @@ siguientes parámetros:
 
 $r_1 = 1.5\; \Omega$
 
-
 $r_2 = 1.2\; \Omega$
 
 
