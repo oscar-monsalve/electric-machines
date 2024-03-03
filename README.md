@@ -49,8 +49,8 @@ siguientes parámetros:
 
 $r_1 = 1.5\\; \Omega,\\; r_2 = 1.2\\; \Omega$
 
-$jX = 6\; \Omega\; (total),\\; jX_m = 110\; \Omega$
+$jX = 6\\; \Omega\\; (total),\\; jX_m = 110\\; \Omega$
 
-$R_m = 900\; \Omega$
+$R_m = 900\\; \Omega$
 
 $s = 0.2$
