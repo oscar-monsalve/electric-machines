@@ -1,14 +1,12 @@
 import numpy as np
-import cmath
-
 import functions as fn
 
 
 # Exercise data
-
 # Motor data
 line_voltage = 440  # V
 field_rpm = 1800
+fp = 0.8
 
 # Resistances (Ohm)
 r_1 = 1.5
@@ -22,34 +20,32 @@ jx_m = complex(0, 110)
 # Slip
 s = 0.2
 
-# Solution
+########################################################
 
+# Solution
 # Preliminars
-phase_voltage = complex(line_voltage / np.sqrt(3), 0)  # Phase voltage
-r_l = r_2 / s  # Load resistance
-z_eq = r_1 + jx + r_l  # Equivalent impedance
+phase_voltage, r_l, z_eq = fn.preliminars(line_voltage, r_2, s, r_1, jx)
 
 # a) Rotor velocity
 rotor_rpm = fn.rotor_velocity(s, field_rpm)
 
 # b) Rotor current
-i_r = phase_voltage / z_eq
-i_r_polar = cmath.polar(i_r)
+i_r, i_r_polar = fn.rotor_current(phase_voltage, z_eq)
 
 # c) Rotor power == output power
-p_r = 3 * i_r_polar[0]**2 * r_l
+p_r = fn.rotor_power(i_r_polar, r_l)
 
 # d) Torque
-omega = rotor_rpm * (2 * np.pi / 60)  # rad/s
-t = p_r / omega
+t = fn.torque(rotor_rpm, p_r)
 
 # e) Motor efficiency
+eta, i_en_polar = fn.motor_efficiency(phase_voltage, r_m, jx_m, i_r, p_r, fp)
 
-
-# __________________________________
+########################################################
 
 # Print results
 print(f"a) The rotor velocity is: {rotor_rpm} rpm")
 print(f"b) The rotor current is: ({i_r_polar[0]} < {np.degrees(i_r_polar[1])}°) A")
 print(f"c) The rotor power (output power) is: {p_r} W")
 print(f"d) The rotor torque is: {t} Nm")
+print(f"e) The motor efficiency is: {eta} %")
