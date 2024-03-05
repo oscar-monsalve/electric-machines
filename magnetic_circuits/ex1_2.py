@@ -9,7 +9,6 @@ y b) la corriente requerida para producir una densidad de flujo de 0.5 T en el e
 
 import numpy as np
 
-
 # Number of turns
 N = 400
 
