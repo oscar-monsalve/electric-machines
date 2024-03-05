@@ -11,5 +11,4 @@ resultante en el entrehierro?
 
 import numpy as np
 
-
 a = 1
