@@ -17,35 +17,32 @@ r_m = 900
 jx = complex(0, 6)  # total
 jx_m = complex(0, 110)
 
-# Slip
-s = 0.2
-
-########################################################
+# Slip values
+s_values = np.linspace(0.01, 0.99, 4)
 
 # Solution
-# Preliminars
-phase_voltage, r_l, z_eq = fn.preliminars(line_voltage, r_2, s, r_1, jx)
+for s in s_values:
 
-# a) Rotor velocity
-rotor_rpm = fn.rotor_velocity(s, field_rpm)
+    phase_voltage, r_l, z_eq = fn.preliminars(line_voltage, r_2, s, r_1, jx)
 
-# b) Rotor current
-i_r, i_r_polar = fn.rotor_current(phase_voltage, z_eq)
+    # a) Rotor velocity
+    rotor_rpm = fn.rotor_velocity(s, field_rpm)
 
-# c) Rotor power == output power
-p_r = fn.rotor_power(i_r_polar, r_l)
+    # b) Rotor current
+    i_r, i_r_polar = fn.rotor_current(phase_voltage, z_eq)
 
-# d) Torque
-t = fn.torque(rotor_rpm, p_r)
+    # c) Rotor power == output power
+    p_r = fn.rotor_power(i_r_polar, r_l)
 
-# e) Motor efficiency
-eta, i_en_polar = fn.motor_efficiency(phase_voltage, r_m, jx_m, i_r, p_r, fp)
+    # d) Torque
+    t = fn.torque(rotor_rpm, p_r)
 
-########################################################
+    # e) Motor efficiency
+    eta, i_en_polar = fn.motor_efficiency(phase_voltage, r_m, jx_m, i_r, p_r, fp)
 
-# Print results
-print(f"a) The rotor velocity is: {rotor_rpm} rpm")
-print(f"b) The rotor current is: ({i_r_polar[0]} < {np.degrees(i_r_polar[1])}°) A")
-print(f"c) The rotor power (output power) is: {p_r} W")
-print(f"d) The rotor torque is: {t} Nm")
-print(f"e) The motor efficiency is: {eta} %")
+    # Print results
+    print(f"a) The rotor velocity is: {rotor_rpm} rpm")
+    print(f"b) The rotor current is: ({i_r_polar[0]} < {np.degrees(i_r_polar[1])}°) A")
+    print(f"c) The rotor power (output power) is: {p_r} W")
+    print(f"d) The rotor torque is: {t} Nm")
+    print(f"e) The motor efficiency is: {eta} %")
