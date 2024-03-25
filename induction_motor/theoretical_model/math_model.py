@@ -52,7 +52,7 @@ def output_power(input_power: float, load: float, rotation_losses: float, copper
 
 
 def torque(output_power: float, velocity: float) -> float:
-    """Returns the motor torque using the output power in watts."""
+    """Returns the motor torque using the output power in Nm."""
 
     torque = output_power / ((velocity * 2 * np.pi) / 60)
 
