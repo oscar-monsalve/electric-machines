@@ -1,0 +1,94 @@
+import matplotlib.pyplot as plt
+import math_model as model
+
+
+# No-load and blocked (short circuit SC) rotor tests lab data
+I_NO_LOAD = 6.5  # A
+V_NO_LOAD = 220  # V
+P_NO_LOAD = 300  # W
+PF_NO_LOAD = 0.9  # Power factor
+
+I_SC = 16  # A
+V_SC = 50  # V
+P_SC = 800  # W
+PF_SC = 0.9  # Power factor
+
+# Additional data
+FREQ = 60  # Hz
+VEL = 1750  # rpm
+loads = [0.25, 0.5, 0.75, 1, 1.25, 1.5]
+
+
+def main():
+    # Total resistance
+    r_e = model.total_resistance(P_SC, I_SC)
+
+    # Rotational losses
+    p_r = model.rotation_losses(P_NO_LOAD, I_NO_LOAD, r_e)
+
+    # Copper losses per load, efficiency and torque
+    input_power = model.input_power(V_NO_LOAD, I_SC, PF_NO_LOAD)
+    p_cu_per_load = []
+    eff_per_load = []
+    output_power_per_load = []
+    torque_per_load = []
+
+    for i in loads:
+        # Copper losses per load
+        p_cu_i = model.copper_losses_per_load(P_SC, i)
+
+        # efficiency per load
+        eff_i = model.efficiency(input_power, i, p_r, p_cu_i)
+
+        # Output power
+        output_power_i_watts, output_power_i_hp = model.output_power(input_power, i, p_r, p_cu_i)
+
+        # Torque per load
+        torque_i = model.torque(output_power_i_watts, VEL)
+
+        p_cu_per_load.append(p_cu_i)
+        eff_per_load.append(eff_i)
+        output_power_per_load.append(output_power_i_watts)
+        torque_per_load.append(torque_i)
+
+    # Print results
+    print(f"The motor total resistance r_e is: {r_e: .2f} ohms.")
+    print(f"The rotational losses P_r is: {p_r: .2f} W.")
+    print(f"The input power is: {input_power: .2f} W.")
+
+    print("The copper losses, efficiencies, output powers and torques per load are:")
+    for load, p_cu, eff, output_power, torque in zip(loads, p_cu_per_load, eff_per_load, output_power_per_load, torque_per_load):
+        print(f"    Load: {load} -> P_Cu: {p_cu: .2f} W, eff: {eff: .2f} %, P_out: {output_power: .2f} W, torque: {torque: .2f} Nm")
+
+    # Plotting
+    # Copper losses as function of the load
+    plt.plot(loads, p_cu_per_load)
+    plt.title("Load vs. Copper losses")
+    plt.xlabel("carga del motor")
+    plt.ylabel(r"Copper losses $P_{cu}$ (W)")
+    plt.show()
+
+    # Efficiency
+    plt.plot(loads, eff_per_load)
+    plt.title("Load vs. efficiency")
+    plt.xlabel("Load")
+    plt.ylabel(r"Efficiency $\eta_M$ (%)")
+    plt.show()
+
+    # Output power
+    plt.plot(loads, output_power_per_load)
+    plt.title("Load vs. output power")
+    plt.xlabel("Load")
+    plt.ylabel(r"Output power $P_{out}$ (W)")
+    plt.show()
+
+    # Torque
+    plt.plot(loads, torque_per_load)
+    plt.title("Load vs. torque")
+    plt.xlabel("Load")
+    plt.ylabel(r"Torque $T$ (Nm)")
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()
