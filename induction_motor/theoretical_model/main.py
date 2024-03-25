@@ -61,33 +61,18 @@ def main():
         print(f"    Load: {load} -> P_Cu: {p_cu: .2f} W, eff: {eff: .2f} %, P_out: {output_power: .2f} W, torque: {torque: .2f} Nm")
 
     # Plotting
-    # Copper losses as function of the load
-    plt.plot(loads, p_cu_per_load)
-    plt.title("Load vs. Copper losses")
-    plt.xlabel("carga del motor")
-    plt.ylabel(r"Copper losses $P_{cu}$ (W)")
-    plt.show()
+    titles = ["Load vs. Copper losses", "Load vs. Efficiency", "Load vs. Output power", "Load vs. Torque"]
+    x_label = "Load"
+    y_labels = [r"Copper losses $P_{cu}$", r"Efficiency $\eta_M$ (%)", r"Output power $P_{out}$ (W)", r"Torque $T$ (Nm)"]
 
-    # Efficiency
-    plt.plot(loads, eff_per_load)
-    plt.title("Load vs. efficiency")
-    plt.xlabel("Load")
-    plt.ylabel(r"Efficiency $\eta_M$ (%)")
-    plt.show()
+    for i, y_data in enumerate([p_cu_per_load, eff_per_load, output_power_per_load, torque_per_load]):
+        plt.figure()
 
-    # Output power
-    plt.plot(loads, output_power_per_load)
-    plt.title("Load vs. output power")
-    plt.xlabel("Load")
-    plt.ylabel(r"Output power $P_{out}$ (W)")
-    plt.show()
-
-    # Torque
-    plt.plot(loads, torque_per_load)
-    plt.title("Load vs. torque")
-    plt.xlabel("Load")
-    plt.ylabel(r"Torque $T$ (Nm)")
-    plt.show()
+        plt.plot(loads, y_data)
+        plt.title(titles[i])
+        plt.xlabel(x_label)
+        plt.ylabel(y_labels[i])
+        plt.show()
 
 
 if __name__ == "__main__":
