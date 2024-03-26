@@ -54,6 +54,11 @@ def torque(rotor_rpm, p_r):
 
 
 def motor_efficiency(phase_voltage, r_m, jx_m, i_r, p_r, fp):
+    """
+    Returns the motor efficiency in (%).
+    The function takes as input parameters the core impedance (r_m, jx_m), the rotor current (i_r), the rotor power (p_r), and the
+    power factor (fp).
+    """
     i_f = phase_voltage / r_m  # Current through the core reactance
     i_m = phase_voltage / jx_m  # Current through the core resistance
     i_0 = i_f + i_m
