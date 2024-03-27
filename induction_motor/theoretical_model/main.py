@@ -19,7 +19,7 @@ VEL = 1750  # rpm
 loads = [0.25, 0.5, 0.75, 1, 1.25, 1.5]
 
 
-def main():
+def main() -> None:
     # Total resistance
     r_e = model.total_resistance(P_SC, I_SC)
 
