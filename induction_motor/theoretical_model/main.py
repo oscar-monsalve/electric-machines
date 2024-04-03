@@ -2,24 +2,25 @@ import matplotlib.pyplot as plt
 import math_model as model
 
 
-# No-load and blocked (short circuit SC) rotor tests lab data
-I_NO_LOAD = 6.5  # A
-V_NO_LOAD = 220  # V
-P_NO_LOAD = 300  # W
-PF_NO_LOAD = 0.9  # Power factor
-
-I_SC = 16  # A
-V_SC = 50  # V
-P_SC = 800  # W
-PF_SC = 0.9  # Power factor
-
-# Additional data
-FREQ = 60  # Hz
-VEL = 1750  # rpm
-loads = [0.25, 0.5, 0.75, 1, 1.25, 1.5]
-
-
 def main() -> None:
+
+    # No-load and blocked (short circuit SC) rotor tests lab data
+    I_NO_LOAD: float = 6.5  # A
+    V_NO_LOAD: float = 220  # V
+    P_NO_LOAD: float = 300  # W
+    PF_NO_LOAD: float = 0.9  # Power factor
+
+    I_SC: float = 16  # A
+    # V_SC: float = 50  # V
+    P_SC: float = 800  # W
+    # PF_SC: float = 0.9  # Power factor
+
+    # Additional data
+    # FREQ = 60  # Hz
+    VEL: float = 1750  # rpm
+    loads: list[float] = [0.25, 0.5, 0.75, 1, 1.25, 1.5]
+
+    # Solution
     # Total resistance
     r_e = model.total_resistance(P_SC, I_SC)
 
