@@ -1,4 +1,4 @@
-import math_model
+import math_model as model
 
 
 """
@@ -20,17 +20,23 @@ g. Applied torque for load conditions.
 def main() -> None:
     # Data
     VOLTAGE: float = 480  # Nominal voltage in V.
-    FREQ: float = 60  # Frequency in Hz.
-    P: float = 4  # Number of poles.
+    FREQ: int = 60  # Frequency in Hz.
+    P: int = 4  # Number of poles.
     XS: float = 0.1  # Synchronous reactance in ohms.
     RA: float = 0.015  # Armature resistance in ohms.
-    FP: float = 0.8  #  Lagging power factor.
+    FP: float = 0.8  # Lagging power factor.
     LOAD: int = "lagging"
-    CONECTION: int = "delta"
-    A_LOAD: float = 1200  # Load current in amps.
+    CONNECTION: int = "delta"
+    I_LOAD: float = 1200  # Load current in amps.
 
-    pf_angle = math_model.power_factor_angle(math_model.power_factor_sign(LOAD, FP))
-    print(pf_angle)
+    pf_angle = model.power_factor_angle(model.power_factor_sign(LOAD, FP))
+
+    velocity = model.velocity(FREQ, P)
+
+    i_a_delta, i_a_polar, v_phi_polar = model.armature_current(CONNECTION, I_LOAD, VOLTAGE, pf_angle)
+
+    print(i_a_delta)
+    print(i_a_polar)
 
 
 if __name__ == "__main__":
