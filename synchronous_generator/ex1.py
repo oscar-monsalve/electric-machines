@@ -60,7 +60,7 @@ def main() -> None:
     # Printing results
     print(f"a). The angular velocity is: {velocity} rpm.")
     print("b). Equivalent circuit results:")
-    print(f"        The phase voltage V_phi is: {v_phi.real} V < {v_phi.imag}°.")
+    print(f"        The phase voltage V_phi is: {v_phi.real:.2f} V < {v_phi.imag}°.")
     print(f"        The armature current IA is: {i_a_pol[0]:.2f} A < {np.rad2deg(i_a_pol[1]):.2f}°.")
     print(f"        The voltage at jXs is: {v_jxs_pol[0]:.2f} V < {np.rad2deg(v_jxs_pol[1]):.2f}°.")
     print(f"        The voltage at RA is: {v_ra_pol[0]:.2f} V < {np.rad2deg(v_ra_pol[1]):.2f}°.")
