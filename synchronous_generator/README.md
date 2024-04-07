@@ -16,4 +16,4 @@ armature resistance of 0.015 Ω.
 
 ## Generator magnetization curve example
 
-<img src="images/mag_curve.png" alt="Generator's magnetization curve" width="550" height="auto"/>
+<img src="images/mag_curve.png" alt="Generator's magnetization curve" width="545" height="auto"/>

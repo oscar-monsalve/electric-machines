@@ -26,7 +26,7 @@ def velocity(freq: int, poles: int) -> int:
     return (120 * freq) / poles
 
 
-def armature_current(connection: str, load_current: float, nominal_voltage: float, pf_angle: float) -> float:
+def armature_current(connection: str, load_current: float, nominal_voltage: float, pf_angle: float) -> complex:
     """Returns the armature current I_A based on the load connection to the generator."""
 
     if connection == "delta":
@@ -42,3 +42,50 @@ def armature_current(connection: str, load_current: float, nominal_voltage: floa
         i_a_star_rec = cmath.rect(i_a_star, np.deg2rad(pf_angle))
         i_a_star_pol = cmath.polar(i_a_star_rec)
         return i_a_star_rec, i_a_star_pol, v_phi_star
+
+
+def complex_reactance(xs: float) -> complex:
+    return complex(0, xs)
+
+
+def complex_resistance(ra: float) -> complex:
+    return complex(ra, 0)
+
+
+def internal_voltage(v_phi: complex, xs: complex, ra: complex, ia: complex) -> complex:
+    v_jxs_rec = xs * ia
+    v_ra_rec = ra * ia
+    e_a_rec = v_phi + v_jxs_rec + v_ra_rec
+    return cmath.polar(v_jxs_rec), cmath.polar(v_ra_rec), cmath.polar(e_a_rec)
+
+
+def copper_losses():
+    pass
+
+
+def output_power():
+    pass
+
+
+def input_power():
+    pass
+
+
+def efficiency():
+    pass
+
+
+def apparent_power():
+    pass
+
+
+def reactive_power():
+    pass
+
+
+def induced_torque():
+    pass
+
+
+def applied_torque():
+    pass
