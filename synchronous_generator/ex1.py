@@ -1,4 +1,6 @@
+import numpy as np
 import math_model as model
+import cmath
 
 
 """
@@ -33,10 +35,9 @@ def main() -> None:
 
     velocity = model.velocity(FREQ, P)
 
-    i_a_delta, i_a_polar, v_phi_polar = model.armature_current(CONNECTION, I_LOAD, VOLTAGE, pf_angle)
+    i_a_rec, i_a_pol, v_phi = model.armature_current(CONNECTION, I_LOAD, VOLTAGE, pf_angle)
 
-    print(i_a_delta)
-    print(i_a_polar)
+    print(f"The armature current is: {i_a_pol[0]} < {np.rad2deg(i_a_pol[1])}°")
 
 
 if __name__ == "__main__":

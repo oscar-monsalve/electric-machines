@@ -30,11 +30,10 @@ def armature_current(connection: str, load_current: float, nominal_voltage: floa
     """Returns the armature current I_A based on the load connection to the generator."""
 
     if connection == "delta":
+        i_a_delta = complex(load_current / np.sqrt(3), np.deg2rad(pf_angle))
         v_phi_delta = complex(nominal_voltage, 0)
-        i_a = load_current / np.sqrt(3)
-        i_a_delta_rec = cmath.rect(i_a, np.deg2rad(pf_angle))
-        i_a_delta_pol = cmath.polar(i_a_delta_rec)
-        return i_a_delta_rec, i_a_delta_pol, v_phi_delta
+        i_a_delta_pol = cmath.rect(load_current / np.sqrt(3), np.deg2rad(pf_angle))
+        return i_a_delta, v_phi_delta
 
     if connection == "star":
         i_a_star = complex(load_current, pf_angle)
