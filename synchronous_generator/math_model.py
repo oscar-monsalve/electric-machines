@@ -59,33 +59,39 @@ def internal_voltage(v_phi: complex, xs: complex, ra: complex, ia: complex) -> c
     return cmath.polar(v_jxs_rec), cmath.polar(v_ra_rec), cmath.polar(e_a_rec)
 
 
-def copper_losses():
-    pass
+def copper_losses(i_a: complex, r_a: complex) -> float:
+    return 3 * (i_a[0]) ** 2 * r_a.real
 
 
-def output_power():
-    pass
+def output_power(v_nominal: float, i_load: float, fp: float) -> float:
+    return np.sqrt(3) * v_nominal * i_load * fp
 
 
-def input_power():
-    pass
+def input_power(p_mech_misc: float, p_core: float, p_cu: float, p_out: float) -> float:
+    return p_mech_misc + p_core + p_cu + p_out
 
 
-def efficiency():
-    pass
+def efficiency(p_in: float, p_out: float) -> float:
+    return (p_out / p_in) * 100
 
 
-def apparent_power():
-    pass
+def apparent_power(p_out: float, fp: float) -> float:
+    return p_out / fp
 
 
-def reactive_power():
-    pass
+def reactive_power(s: float, p_out: float) -> float:
+    return np.sqrt(s ** 2 - p_out ** 2)
 
 
-def induced_torque():
-    pass
+def converted_power(p_cu: float, p_out: float) -> float:
+    return p_cu + p_out
 
 
-def applied_torque():
-    pass
+def induced_torque(p_conv: float, velocity: float) -> float:
+    velocity_rad = velocity * ((2 * np.pi) / 60)
+    return p_conv / velocity_rad
+
+
+def applied_torque(p_in: float, velocity: float):
+    velocity_rad = velocity * ((2 * np.pi) / 60)
+    return p_in / velocity_rad

@@ -4,8 +4,8 @@ import math_model as model
 
 
 """
-A 480 V, 60 Hz, 4-pole, delta-connected, synchronous generator has a synchronous reactance of 0.1 Ω and an
-armature resistance of 0.015 Ω.
+Exercise 1. A 480 V, 60 Hz, 4-pole, delta-connected, synchronous generator has a synchronous reactance of 0.1 Ω
+and an armature resistance of 0.015 Ω.
 
 a. What is the speed of the generator?
 b. If a load is connected in delta drawing 1200 A with fp= 0.8 in lagging, how much field current is required to
@@ -30,8 +30,8 @@ def main() -> None:
     LOAD: str = "lagging"
     CONNECTION: str = "delta"
     I_LOAD: float = 1200  # Load current in amps.
-    P_MECH_MISC = 40  # Mechanical and miscellaneous losses in kW.
-    P_CORE = 30  # Core losses in kW.
+    P_MECH_MISC = 40000  # Mechanical and miscellaneous losses in W.
+    P_CORE = 30000  # Core losses in W.
 
     pf_angle = model.power_factor_angle(model.power_factor_sign(LOAD, FP))
     velocity = model.velocity(FREQ, P)
@@ -43,6 +43,19 @@ def main() -> None:
     v_jxs_pol, v_ra_pol, e_a_pol = model.internal_voltage(v_phi, jxs, ra, i_a_rec)
 
     # Efficiency
+    p_cu = model.copper_losses(i_a_pol, ra)
+    p_out = model.output_power(VOLTAGE, I_LOAD, FP)
+    p_conv = model.converted_power(p_cu, p_out)
+    p_in = model.input_power(P_MECH_MISC, P_CORE, p_cu, p_out)
+    eff = model.efficiency(p_in, p_out)
+
+    # Apparent and reactive powers
+    apparent_power = model.apparent_power(p_out, FP)
+    reactive_power = model.reactive_power(apparent_power, p_out)
+
+    # Torques
+    t_ind = model.induced_torque(p_conv, velocity)
+    t_ap = model.applied_torque(p_in, velocity)
 
     # Printing results
     print(f"a). The angular velocity is: {velocity} rpm.")
@@ -53,6 +66,17 @@ def main() -> None:
     print(f"        The voltage at RA is: {v_ra_pol[0]:.2f} V < {np.rad2deg(v_ra_pol[1]):.2f}°.")
     print(f"        The internal voltage E_A is: {e_a_pol[0]:.2f} V < {np.rad2deg(e_a_pol[1]):.2f}°.")
     print(f"        The field current to generate {e_a_pol[0]:.2f} V is aprox. 5.5 A based on the magnetization curve.")
+    print("d). Efficiency:")
+    print(f"        The cooper losses are: {p_cu:.2f} W.")
+    print(f"        The ouput power is: {p_out:.2f} W.")
+    print(f"        The input power is: {p_in:.2f} W.")
+    print(f"        The efficiency is: {eff:.2f} %.")
+    print("e). Power triangle:")
+    print(f"        The active power is: {p_out:.2f} W.")
+    print(f"        The apparent power is: {apparent_power:.2f} VA.")
+    print(f"        The reactive power is: {reactive_power:.2f} VAR.")
+    print(f"f). The induced torque is: {t_ind:.2f} Nm.")
+    print(f"g). The applied torque is: {t_ap:.2f} Nm.")
 
 
 if __name__ == "__main__":
