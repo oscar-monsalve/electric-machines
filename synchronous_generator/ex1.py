@@ -1,6 +1,6 @@
 import numpy as np
 import math_model as model
-import cmath
+# import cmath
 
 
 """
@@ -32,12 +32,12 @@ def main() -> None:
     I_LOAD: float = 1200  # Load current in amps.
 
     pf_angle = model.power_factor_angle(model.power_factor_sign(LOAD, FP))
-
     velocity = model.velocity(FREQ, P)
-
     i_a_rec, i_a_pol, v_phi = model.armature_current(CONNECTION, I_LOAD, VOLTAGE, pf_angle)
 
-    print(f"The armature current is: {i_a_pol[0]} < {np.rad2deg(i_a_pol[1])}°")
+    # Printing results
+    print(f"The angular velocity is: {velocity} rpm.")
+    print(f"The armature current is: {i_a_pol[0]:.2f} < {np.rad2deg(i_a_pol[1]):.2f}°")
 
 
 if __name__ == "__main__":

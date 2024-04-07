@@ -31,11 +31,14 @@ def armature_current(connection: str, load_current: float, nominal_voltage: floa
 
     if connection == "delta":
         v_phi_delta = complex(nominal_voltage, 0)
-        i_a = load_current / np.sqrt(3)
-        i_a_delta_rec = cmath.rect(i_a, np.deg2rad(pf_angle))
+        i_a_delta = load_current / np.sqrt(3)
+        i_a_delta_rec = cmath.rect(i_a_delta, np.deg2rad(pf_angle))
         i_a_delta_pol = cmath.polar(i_a_delta_rec)
         return i_a_delta_rec, i_a_delta_pol, v_phi_delta
 
     if connection == "star":
-        i_a_star = complex(load_current, pf_angle)
         v_phi_star = complex(nominal_voltage / np.sqrt(3), 0)
+        i_a_star = load_current
+        i_a_star_rec = cmath.rect(i_a_star, np.deg2rad(pf_angle))
+        i_a_star_pol = cmath.polar(i_a_star_rec)
+        return i_a_star_rec, i_a_star_pol, v_phi_star
