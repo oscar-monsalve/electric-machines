@@ -34,35 +34,41 @@ def main() -> None:
     in2 = model.nominal_current(sn, vn2)
 
     open_circuit_test_side = model.open_circuit_test_side(i0, in1, in2)
-
     s0 = model.open_circuit_aparent_power(open_circuit_test_side, vn1, vn2, i0)
     q0 = model.open_circuit_reactive_power(s0, p0)
 
     rm1, xm1, rm2, xm2 = model.core_resistance_and_reactance(open_circuit_test_side, a, vn1, vn2, p0, q0)
-
     if1, im1, if2, im2 = model.core_currents(open_circuit_test_side, vn1, vn2, rm1, xm1, rm2, xm2)
-
     i01, i02 = model.open_circuit_current(if1, im1, if2, im2)
+
+    short_circuit_test_side = model.short_circuit_test_side(vcc, vn1, vn2)
+    scc = model.short_circuit_aparent_power(short_circuit_test_side, vcc, in1, in2)
+    qcc = model.short_circuit_reactive_power(scc, pcc)
 
     print(f"- Transformation ratio -> a: {a:.2f}.")
     print(f"- Primary nominal current -> IN1: {in1:.2f} A.")
-    print(f"- Secondary nominal current -> IN2: {in2:.2f} A.")
+    print(f"- Secondary nominal current -> IN2: {in2:.2f} A.\n")
+
     print(f"- The open-circuit test was performed at the {open_circuit_test_side.upper()} side.")
     print(f"- Open-circuit aparent power at the {open_circuit_test_side.upper()} -> S0: {s0:.2f} VA.")
     print(f"- Open-circuit reactive power at the {open_circuit_test_side.upper()} -> Q0: {q0:.2f} VAR.")
 
-    print("- Core impedance referred to the primary:")
+    print("- Core impedance at the primary:")
     print(f"        RM1: {rm1:.2f} ohm.\n        XM1: {xm1:.2f} ohm.")
     print("- Core impedance referred to the secondary:")
     print(f"        RM2: {rm2:.2f} ohm.\n        XM2: {xm2:.2f} ohm.")
 
-    print("- Core currents referred to the primary:")
+    print("- Core currents at the primary:")
     print(f"        If1: {if1:.6f} A.\n        IM1: {im1:.6f} A.")
-    print("- Core impedance referred to the secondary:")
+    print("- Core currents referred to the secondary:")
     print(f"        If2: {if2:.2f} A.\n        IM2: {im2:.2f} A.")
 
     print(f"- Open-circuit current at the primary -> I01: {i01:.6f} A.")
-    print(f"- Open-circuit current at the secondary -> I02: {i02:.2f} A.")
+    print(f"- Open-circuit current referred to the secondary -> I02: {i02:.2f} A.\n")
+
+    print(f"- The short-circuit test was performed at the {short_circuit_test_side.upper()} side.")
+    print(f"- Short-circuit aparent power at the {short_circuit_test_side.upper()} -> Scc: {scc:.2f} VA.")
+    print(f"- Short-circuit reactive power at the {short_circuit_test_side.upper()} -> Qcc: {qcc:.2f} VAR.")
 
 
 if __name__ == "__main__":
