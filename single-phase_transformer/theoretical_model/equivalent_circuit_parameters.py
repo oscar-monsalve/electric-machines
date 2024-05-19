@@ -103,8 +103,22 @@ def short_circuit_reactive_power(short_circuit_aparent_power: float, short_circu
     return np.sqrt(short_circuit_aparent_power**2 - short_circuit_active_power**2)
 
 
-def equivalent_resistance_and_reactance():
-    if short_circuit_test_side == "primary":
-        ...
-    if short_circuit_test_side == "secondary":
-        ...
+def equivalent_resistance_and_reactance(short_circuit_active_power: float, short_circuit_reactive_power: float,
+                                        primary_current: float, secondary_current: float) -> float:
+    re1 = short_circuit_active_power / primary_current ** 2
+    xe1 = short_circuit_reactive_power / primary_current ** 2
+    re2 = short_circuit_active_power / secondary_current ** 2
+    xe2 = short_circuit_reactive_power / secondary_current ** 2
+
+    return re1, xe1, re2, xe2
+
+
+def primary_secondary_impedances(transformation_ratio: float, primary_equivalent_resistance: float,
+                                 primary_equivalent_reactance: float, secondary_equivalent_resistance: float,
+                                 secondary_equivalent_reactance: float) -> float:
+    r1 = primary_equivalent_resistance / 2
+    x1 = primary_equivalent_reactance / 2
+    r2 = primary_equivalent_resistance / (2 * transformation_ratio ** 2)
+    x2 = primary_equivalent_reactance / (2 * transformation_ratio ** 2)
+
+    return r1, x1, r2, x2
