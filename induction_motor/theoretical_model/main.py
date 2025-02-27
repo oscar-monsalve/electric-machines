@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import math_model as model
-import scienceplots
+import scienceplots  # install with -> "pip install SciencePlots".
 plt.style.use(["science", "notebook", "grid"])
 
 
