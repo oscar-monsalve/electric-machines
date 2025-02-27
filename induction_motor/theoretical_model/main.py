@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import math_model as model
+import scienceplots
+plt.style.use(["science", "notebook", "grid"])
 
 
 def main() -> None:
@@ -68,7 +70,6 @@ def main() -> None:
 
     for i, y_data in enumerate([p_cu_per_load, eff_per_load, output_power_per_load, torque_per_load]):
         plt.figure()
-
         plt.plot(loads, y_data)
         plt.title(titles[i])
         plt.xlabel(x_label)
