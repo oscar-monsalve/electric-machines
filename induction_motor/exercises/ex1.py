@@ -1,8 +1,18 @@
 import numpy as np
-import functions as fn
+import helpers_ex1 as fn
 
 
-# Exercise data
+# Exercise
+# Se tiene un motor de inducción trifásico con conexión en estrella de 5 hp, 60 Hz, y 1800 rpm y 440 V con los
+# siguientes parámetros:
+# r1 = 1.5 ohms, r2 = 1.2 ohms, jX = 6 ohms, jXm 110 ohms, Rm = 900 ohms, s = 0.2
+# Calcular:
+# a). Velocidad del rotor.
+# b). Corriente del rotor referida al estator.
+# c). Potencia del rotor
+# d). Torque de salida.
+# f). Eficiencia del motor.
+
 # Motor data
 line_voltage = 440  # V
 field_rpm = 1800
