@@ -20,14 +20,14 @@ d) Calcule y haga la gráfica de la característica par-velocidad del motor tant
 
 ### Solution
 
-a). - Par máximo                  $$\rightarrow \tau_{max}$$: 230.80 Nm.\
-    - Deslizamiento en par máximo $$\rightarrow s_{max}$$: 0.2014.\
+a). - Par máximo                  $\rightarrow \tau_{max}$: 230.80 Nm.\
+    - Deslizamiento en par máximo $\rightarrow s_{max}$: 0.2014.\
     - Velocidad en par máximo     $\rightarrow N_m\\; @T_{max}$: 1437.46 rpm
 
 b). Par en el arranque -> $\tau$ en arranque: 106.56 Nm.
 
 c). Si se duplica R2 (2R2: 0.664 ohms), el deslizamiento se duplica, al cual se presenta el par máximo:\
-    - Deslizamiento duplicando R2          $\rightarrow s_{max}\\; @2R2$: 0.4028.\
+    - Deslizamiento duplicando R2          $\rightarrow s_{max}$@2R2: 0.4028.\
     - Velocidad del rotor con 2R2          $\rightarrow n_{m}$@2R2: 1074.92 rpm.\
     - El torque máximo no depende de R2    $\rightarrow \tau_{max}$: 230.80 Nm.\
     - Torque al arranque del rotor con 2R2 $\rightarrow \tau_{arranque}$@2R2: 174.06 Nm.
