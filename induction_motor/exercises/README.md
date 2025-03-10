@@ -17,6 +17,21 @@ c) Si se duplica la resistencia del rotor, ¿Cuál es la velocidad en que se pre
 d) Calcule y haga la gráfica de la característica par-velocidad del motor tanto con la resistencia del rotor
    original como con la resistencia del rotor al doble.
 
+### Solution
+
+a). - Par máximo                  -> $\tau_{max}$: 230.80 Nm.
+    - Deslizamiento en par máximo -> $s_{max}$: 0.2014.
+    - Velocidad en par máximo     -> $N_m\\; @T_max$: 1437.46 rpm
+
+b). Par en el arranque -> $\tau$ en arranque: 106.56 Nm.
+
+c). Si se duplica R2 (2R2: 0.664 ohms), el deslizamiento se duplica, al cual se presenta el par máximo:
+    - Deslizamiento duplicando R2          -> $s_{max}\\; @2R2$: 0.4028.
+    - Velocidad del rotor con 2R2          -> $n_{m} @2R2$: 1074.92 rpm.
+    - El torque máximo no depende de R2    -> $\tau_{max}$: 230.80 Nm.
+    - Torque al arranque del rotor con 2R2 -> $\tau_{arranque}\\; @2R2$: 174.06 Nm.
+
+
 <figure>
     <img src="images/ex2_torque_velocity.png" alt="torque-velocity" width="400" height="auto"/>
     <figcaption>Figure 2. característica par-velocidad del motor.</figcaption>
