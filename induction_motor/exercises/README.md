@@ -20,8 +20,8 @@ d) Calcule y haga la gráfica de la característica par-velocidad del motor tant
 
 ### Solution
 
-a). - Par máximo                  $\rightarrow \tau_{max}$: 230.80 Nm.\
-    - Deslizamiento en par máximo $\rightarrow s_{max}$: 0.2014.\
+a). - Par máximo                  $$\rightarrow \tau_{max}$$: 230.80 Nm.\
+    - Deslizamiento en par máximo $$\rightarrow s_{max}$$: 0.2014.\
     - Velocidad en par máximo     $\rightarrow N_m\\; @T_{max}$: 1437.46 rpm
 
 b). Par en el arranque -> $\tau$ en arranque: 106.56 Nm.
