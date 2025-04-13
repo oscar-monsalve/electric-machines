@@ -1,5 +1,5 @@
-import cmath
-from math import sqrt, radians, degrees, cos
+from cmath import rect, polar
+from math import cos, sin, sqrt, radians, degrees
 
 
 def syncrhonous_impedance_magnitude(armature_resistance: float, syncrhonous_reactance: complex, ) -> complex:
@@ -20,18 +20,18 @@ def equivalent_circuit_impedance_magnitude(circuit_equivalent_resistance: float,
 
 def power_factor_angle(load_impedance: complex) -> float:
     if load_impedance.imag == 0:
-        return degrees(cmath.polar(load_impedance)[1])
+        return degrees(polar(load_impedance)[1])
     elif load_impedance.imag > 0:
-        return degrees(cmath.polar(load_impedance)[1]) * -1
+        return degrees(polar(load_impedance)[1]) * -1
     elif load_impedance.imag < 0:
-        return degrees(cmath.polar(load_impedance)[1]) * -1
+        return degrees(polar(load_impedance)[1]) * -1
 
 
 def armature_current(internal_generated_voltage: float, equivalent_impedance: complex,
                      pf_angle: float) -> tuple[complex, tuple[float, float]]:
     ia = internal_generated_voltage / sqrt(equivalent_impedance.real**2 + equivalent_impedance.imag**2)
-    i_a_rec = cmath.rect(ia, radians(pf_angle))
-    i_a_pol = cmath.polar(i_a_rec)
+    i_a_rec = rect(ia, radians(pf_angle))
+    i_a_pol = polar(i_a_rec)
     return i_a_rec, i_a_pol
 
 
@@ -52,20 +52,29 @@ def input_power(line_voltage: float, armature_current: float, pf_angle: float, a
 def internal_generated_voltage_phasor(phase_voltage: float, armature_current: complex,
                                       syncrhonous_reactance: complex) -> tuple[float, float]:
     ea_rec = phase_voltage + armature_current * (syncrhonous_reactance)
-    ea_magnitud = cmath.polar(ea_rec)[0]
-    ea_phase_angle = degrees(cmath.polar(ea_rec)[1])
+    ea_magnitud = polar(ea_rec)[0]
+    ea_phase_angle = degrees(polar(ea_rec)[1])
     return ea_magnitud, ea_phase_angle
 
 
 def armature_resistance_voltage(armature_current: complex, armature_resistance: float) -> tuple[float, float]:
     v_ra = armature_current * armature_resistance
-    v_ra_magnitud = cmath.polar(v_ra)[0]
-    v_ra_angle = degrees(cmath.polar(v_ra)[1])
+    v_ra_magnitud = polar(v_ra)[0]
+    v_ra_angle = degrees(polar(v_ra)[1])
     return v_ra_magnitud, v_ra_angle
 
 
 def syncrhonous_reactance_voltage(armature_current: complex, syncrhonous_reactance: complex) -> tuple[float, float]:
     v_xs = armature_current * syncrhonous_reactance
-    v_xs_magnitud = cmath.polar(v_xs)[0]
-    v_xs_angle = degrees(cmath.polar(v_xs)[1])
+    v_xs_magnitud = polar(v_xs)[0]
+    v_xs_angle = degrees(polar(v_xs)[1])
     return v_xs_magnitud, v_xs_angle
+
+
+def phasor_xy_coordinates(phasors: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    phasor_xy_coordinates = []
+    for r, theta in phasors:
+        x = r * cos(radians(theta))
+        y = r * sin(radians(theta))
+        phasor_xy_coordinates.append((x, y))
+    return phasor_xy_coordinates

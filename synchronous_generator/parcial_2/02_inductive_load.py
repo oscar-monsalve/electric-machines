@@ -1,13 +1,11 @@
-from math import sin, cos, degrees
 import helpers as h
-import matplotlib.pyplot as plt
 
 
 # Input data
-RL_CEDULA: float = 175  # Últimos dos dígitos de la cédula de los estudiantes para definir a la resistencia de carga
+XL_CEDULA: complex = 63j  # Últimos dos dígitos de la cédula de los estudiantes para definir a la reactancia de carga
 
 # Constants
-ZL:      complex = RL_CEDULA + 0j
+ZL:      complex = 175 + XL_CEDULA
 EA:        float = 2400
 RA:        float = 17
 XS:      complex = 144j
@@ -27,14 +25,6 @@ def main() -> None:
     ea_magnitud, ea_phase_angle = h.internal_generated_voltage_phasor(phase_voltage, ia_rec, zs_phasor)
     v_ra_magnitude, v_ra_phase_angle = h.armature_resistance_voltage(ia_rec, RA)
     v_xs_magnitude, v_xs_phase_angle = h.syncrhonous_reactance_voltage(ia_rec, XS)
-    phasors = [
-        (phase_voltage, 0),
-        (ia_pol[0], ia_pol[1]),
-        (v_ra_magnitude, v_ra_phase_angle),
-        (v_xs_magnitude, v_xs_phase_angle),
-        (ea_magnitud, ea_phase_angle),
-    ]
-    phasor_xy_coordinates = h.phasor_xy_coordinates(phasors)
 
     print(f"a). Z_S   : {zs_magnitude} Ω")
     print(f"b). R_eq  : {req} Ω")
@@ -49,12 +39,6 @@ def main() -> None:
     print(f"         E_A      : {ea_magnitud:.2f} V ∠{ea_phase_angle:.2f}°")
     print(f"         I_A*R_A  : {v_ra_magnitude:.2f} V  ∠{v_ra_phase_angle:.2f}°")
     print(f"         I_A*jX_S : {v_xs_magnitude:.2f} V ∠{v_xs_phase_angle:.2f}°")
-
-    v_phase_vec = phasor_xy_coordinates[0]
-    i_a_vec = phasor_xy_coordinates[1]
-    v_ra_vec = phasor_xy_coordinates[2]
-    v_xs_vec = phasor_xy_coordinates[3]
-    v_xs_vec = phasor_xy_coordinates[4]
 
 
 if __name__ == "__main__":
