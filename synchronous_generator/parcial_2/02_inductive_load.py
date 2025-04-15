@@ -55,36 +55,36 @@ def main() -> None:
     print(f"         I_A*R_A  : {v_ra_magnitude:.2f} V  ∠{v_ra_phase_angle:.2f}°")
     print(f"         I_A*jX_S : {v_xs_magnitude:.2f} V ∠{v_xs_phase_angle:.2f}°")
 
-    fig, ax = plt.subplots(figsize=(10, 7))
-    ax.set_aspect("equal")
+    fig, ax = plt.subplots(figsize=(10, 8))
 
     ax.quiver(0, 0, v_phase_vec[0], v_phase_vec[1], angles="xy", scale_units="xy",
               scale=1, color="blue",
-              label=r"$V_{\phi}$")
+              label=fr"$V_{{\phi}}={{{phase_voltage:.2f}}}\; V \; \angle 0^{{\circ}}$")
 
     ax.quiver(0, 0, ia_vec[0], ia_vec[1], angles="xy", scale_units="xy",
               scale=0.04, color="red",
-              label=r"$I_A$ (not to scale)")
+              label=fr"$I_A={{{ia_magnitude:.2f}}}\; A \; \angle {{{ia_phase_angle:.2f}}}^{{\circ}}$ (not to scale)")
 
     ax.quiver(0, 0, ea_vec[0], ea_vec[1], angles="xy", scale_units="xy",
               scale=1, color="purple",
-              label=r"$E_A$")
+              label=fr"$E_A={{{ea_magnitud:.2f}}}\; V \; \angle {{{ea_phase_angle:.2f}}}^{{\circ}}$")
 
     ax.quiver(v_phase_vec[0], v_phase_vec[1], v_ra_vec[0], v_ra_vec[1], angles="xy", scale_units="xy",
               scale=1, color="green",
-              label=r"$I_A R_A$")
+              label=fr"$I_A R_A={{{v_ra_magnitude:.2f}}}\; V \; \angle {{{v_ra_phase_angle:.2f}}}^{{\circ}}$")
 
     ax.quiver(v_phase_vec[0]+v_ra_vec[0], v_phase_vec[1]+v_ra_vec[1], v_xs_vec[0], v_xs_vec[1], angles="xy", scale_units="xy",
               scale=1, color="black",
-              label=r"$I_A jX_S$")
+              label=fr"$I_A jX_S={{{v_xs_magnitude:.2f}}}\; V \; \angle {{{v_xs_phase_angle:.2f}}}^{{\circ}}$")
 
+    ax.set_xlim(min(0, ea_vec[0])-100, max(ea_vec[0], v_phase_vec[0]+v_ra_vec[0])+100)
+    ax.set_ylim(min(0, ia_vec[1])-200, max(ea_vec[1], v_phase_vec[1])+100)
+    ax.set_aspect("equal")
     ax.set_title('Phasor Diagram - Synchronous Generator')
     ax.set_xlabel('Re')
     ax.set_ylabel('Im')
     ax.legend(loc="upper left")
     ax.grid(True)
-    ax.set_xlim(min(0, ea_vec[0])-100, max(ea_vec[0], v_phase_vec[0]+v_ra_vec[0])+100)
-    ax.set_ylim(min(0, ia_vec[1])-200, max(ea_vec[1], v_phase_vec[1])+100)
     plt.show()
 
 
