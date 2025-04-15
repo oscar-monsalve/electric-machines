@@ -63,15 +63,15 @@ def main() -> None:
     ax.quiver(0, 0, ia_vec[0], ia_vec[1], angles="xy", scale_units="xy", scale=0.04, color="red", label=r"$I_A$ (not to scale)")
     ax.quiver(0, 0, ea_vec[0], ea_vec[1], angles="xy", scale_units="xy", scale=1, color="purple", label=r"$E_A$")
     ax.quiver(v_phase_vec[0], v_phase_vec[1], v_ra_vec[0], v_ra_vec[1], angles="xy", scale_units="xy", scale=1, color="green", label=r"$I_A R_A$")
-    ax.quiver(v_phase_vec[0]+v_ra_vec[0], v_phase_vec[1]+v_ra_vec[1], v_xs_vec[0], v_xs_vec[1], angles="xy", scale_units="xy", scale=1, color="black", label=r"$I_A\times jX_S$")
+    ax.quiver(v_phase_vec[0]+v_ra_vec[0], v_phase_vec[1]+v_ra_vec[1], v_xs_vec[0], v_xs_vec[1], angles="xy", scale_units="xy", scale=1, color="black", label=r"$I_A jX_S$")
 
     ax.set_title('Phasor Diagram - Synchronous Generator')
     ax.set_xlabel('Re')
     ax.set_ylabel('Im')
-    ax.legend(loc="upper left")
+    ax.legend()
     ax.grid(True)
-    ax.set_xlim(-100, max(ea_vec[0], v_phase_vec[0])+50)
-    ax.set_ylim(min(ia_vec[1], v_phase_vec[1])-50, max(ea_vec[1], v_phase_vec[1])+50)
+    ax.set_xlim(min(0, ea_vec[0])-100, max(ea_vec[0], v_phase_vec[0]+v_ra_vec[0])+100)
+    ax.set_ylim(min(0, ia_vec[1])-200, max(ea_vec[1], v_phase_vec[1])+100)
     plt.show()
 
 
