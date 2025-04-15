@@ -52,6 +52,7 @@ def main() -> None:
     print("f). Phasor diagram values:")
     print(f"         V_phi    : {phase_voltage:.2f} V ∠0°")
     print(f"         E_A      : {ea_magnitud:.2f} V ∠{ea_phase_angle:.2f}°")
+    print(f"         I_A      : {ia_pol[0]:.2f} V ∠{degrees(ia_pol[1]):.2f}°")
     print(f"         I_A*R_A  : {v_ra_magnitude:.2f} V  ∠{v_ra_phase_angle:.2f}°")
     print(f"         I_A*jX_S : {v_xs_magnitude:.2f} V ∠{v_xs_phase_angle:.2f}°")
 
@@ -64,6 +65,9 @@ def main() -> None:
     ax.quiver(v_phase_vec[0], v_phase_vec[1], v_ra_vec[0], v_ra_vec[1], angles="xy", scale_units="xy", scale=1, color="green", label=r"$I_A R_A$")
     ax.quiver(v_phase_vec[0]+v_ra_vec[0], v_phase_vec[1]+v_ra_vec[1], v_xs_vec[0], v_xs_vec[1], angles="xy", scale_units="xy", scale=1, color="black", label=r"$I_A\times jX_S$")
 
+    ax.set_title('Phasor Diagram - Synchronous Generator')
+    ax.set_xlabel('Re')
+    ax.set_ylabel('Im')
     ax.legend(loc="upper left")
     ax.grid(True)
     ax.set_xlim(-100, max(ea_vec[0], v_phase_vec[0])+50)
