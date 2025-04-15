@@ -28,11 +28,12 @@ def power_factor_angle(load_impedance: complex) -> float:
 
 
 def armature_current(internal_generated_voltage: float, equivalent_impedance: complex,
-                     pf_angle: float) -> tuple[complex, tuple[float, float]]:
+                     pf_angle: float) -> tuple[complex, float, float]:
     ia = internal_generated_voltage / sqrt(equivalent_impedance.real**2 + equivalent_impedance.imag**2)
     i_a_rec = rect(ia, radians(pf_angle))
-    i_a_pol = polar(i_a_rec)
-    return i_a_rec, i_a_pol
+    i_a_magnitude = polar(i_a_rec)[0]
+    i_a_phase_angle = degrees(polar(i_a_rec)[1])
+    return i_a_rec, i_a_magnitude, i_a_phase_angle
 
 
 def phase_voltage(armature_current_magnitude: float, load_impedance: float) -> float:

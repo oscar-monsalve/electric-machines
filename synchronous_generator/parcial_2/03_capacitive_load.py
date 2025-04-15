@@ -20,17 +20,17 @@ def main() -> None:
     xeq = h.equivalent_circuit_reactance(XS, ZL)
     zeq = req + xeq
     power_factor_angle = h.power_factor_angle(ZL)
-    ia_rec, ia_pol = h.armature_current(EA, zeq, power_factor_angle)
-    phase_voltage = h.phase_voltage(ia_pol[0], ZL)
+    ia_rec, ia_magnitude, ia_phase_angle = h.armature_current(EA, zeq, power_factor_angle)
+    phase_voltage = h.phase_voltage(ia_magnitude, ZL)
     line_voltage = h.line_voltage(phase_voltage)
-    p_in = h.input_power(line_voltage, ia_pol[0], power_factor_angle, RA)
+    p_in = h.input_power(line_voltage, ia_magnitude, power_factor_angle, RA)
     ea_magnitud, ea_phase_angle = h.internal_generated_voltage_phasor(phase_voltage, ia_rec, zs_phasor)
     v_ra_magnitude, v_ra_phase_angle = h.armature_resistance_voltage(ia_rec, RA)
     v_xs_magnitude, v_xs_phase_angle = h.syncrhonous_reactance_voltage(ia_rec, XS)
     phasors = [
         (phase_voltage, 0),
         (ea_magnitud, ea_phase_angle),
-        (ia_pol[0], degrees(ia_pol[1])),
+        (ia_magnitude, ia_phase_angle),
         (v_ra_magnitude, v_ra_phase_angle),
         (v_xs_magnitude, v_xs_phase_angle),
     ]
@@ -45,14 +45,14 @@ def main() -> None:
     print(f"b). R_eq  : {req} Ω")
     print(f"    X_eq  : {xeq} Ω")
     print(f"    Z_eq  : {zeq} Ω")
-    print(f"c). I_A   : {ia_pol[0]:.2f} A ∠{power_factor_angle:.2f}°")
+    print(f"c). I_A   : {ia_magnitude:.2f} A ∠{ia_phase_angle:.2f}°")
     print(f"d). V_phi : {phase_voltage:.2f} V ∠0°")
     print(f"    V_L   : {line_voltage:.2f} V")
     print(f"e). P_in  : {p_in:.2f} W")
     print("f). Phasor diagram values:")
     print(f"         V_phi    : {phase_voltage:.2f} V ∠0°")
     print(f"         E_A      : {ea_magnitud:.2f} V ∠{ea_phase_angle:.2f}°")
-    print(f"         I_A      : {ia_pol[0]:.2f} V ∠{degrees(ia_pol[1]):.2f}°")
+    print(f"         I_A      : {ia_magnitude:.2f} V ∠{ia_phase_angle:.2f}°")
     print(f"         I_A*R_A  : {v_ra_magnitude:.2f} V  ∠{v_ra_phase_angle:.2f}°")
     print(f"         I_A*jX_S : {v_xs_magnitude:.2f} V ∠{v_xs_phase_angle:.2f}°")
 
