@@ -78,14 +78,18 @@ def main() -> None:
               label=fr"$I_A jX_S={{{v_xs_magnitude:.2f}}}\; V \; \angle {{{v_xs_phase_angle:.2f}}}^{{\circ}}$")
 
     # Phasor labels
-    h.label_vector(ax, (0, 0), v_phase_vec, r"$V_\phi$", "blue")
-    h.label_vector(ax, (0, 0), ia_vec, r"$I_A$", "red")
-    h.label_vector(ax, (0, 0), ea_vec, r"$E_A$", "purple")
+    origin = (0, 0)
+    v_ra_start = (v_phase_vec[0] + v_ra_vec[0], v_ra_vec[1] + v_phase_vec[1])
+
+    h.label_vector(ax, origin, v_phase_vec, r"$V_\phi$", "blue")
+    h.label_vector(ax, origin, ia_vec, r"$I_A$", "red")
+    h.label_vector(ax, origin, ea_vec, r"$E_A$", "purple")
+    h.label_vector(ax, v_ra_start, v_ra_vec, r"$E_A$", "purple")
 
     # ax.text(v_phase_vec[0]-90, v_phase_vec[1]-100, r"$V_\phi$", color="blue", fontsize=20, weight="bold")
     # ax.text(ia_vec[0]+175, ia_vec[1]-100, r"$I_A$", color="red", fontsize=20, weight="bold")
     # ax.text(ea_vec[0]-100, ea_vec[1]+20, r"$E_A$", color="purple", fontsize=20, weight="bold")
-    # ax.text(v_phase_vec[0]+v_ra_vec[0]-90, v_ra_vec[1]+v_phase_vec[1]-100, r"$I_A R_A$", color="green", fontsize=20, weight="bold")
+    # ax.text(v_ra_start[0]-90, v_ra_start[1]-100, r"$I_A R_A$", color="green", fontsize=20, weight="bold")
     # ax.text(v_phase_vec[0]+v_ra_vec[0]+40, v_xs_vec[1]-90, r"$I_A jX_S$", color="black", fontsize=20, weight="bold")
 
     ax.set_xlim(min(0, ea_vec[0])-200, max(ea_vec[0], v_phase_vec[0]+v_ra_vec[0])+200)
