@@ -57,42 +57,39 @@ def main() -> None:
 
     fig, ax = plt.subplots(figsize=(10, 8))
 
-    ax.quiver(0, 0, v_phase_vec[0], v_phase_vec[1], angles="xy", scale_units="xy",
+    # Phasor's start and end
+    origin = (0, 0)
+    v_ra_vec_start = (v_phase_vec[0], v_phase_vec[1])
+    v_xs_vec_start = (v_phase_vec[0] + v_ra_vec[0], v_phase_vec[1] + v_ra_vec[1])
+
+    ax.quiver(*origin, *v_phase_vec, angles="xy", scale_units="xy",
               scale=1, color="blue",
               label=fr"$V_{{\phi}}={{{phase_voltage:.2f}}}\; V \; \angle 0^{{\circ}}$")
 
-    ax.quiver(0, 0, ia_vec[0], ia_vec[1], angles="xy", scale_units="xy",
+    ax.quiver(*origin, *ia_vec, angles="xy", scale_units="xy",
               scale=0.04, color="red",
               label=fr"$I_A={{{ia_magnitude:.2f}}}\; A \; \angle {{{ia_phase_angle:.2f}}}^{{\circ}}$ (not to scale)")
 
-    ax.quiver(0, 0, ea_vec[0], ea_vec[1], angles="xy", scale_units="xy",
+    ax.quiver(*origin, *ea_vec, angles="xy", scale_units="xy",
               scale=1, color="purple",
               label=fr"$E_A={{{ea_magnitud:.2f}}}\; V \; \angle {{{ea_phase_angle:.2f}}}^{{\circ}}$")
 
-    ax.quiver(v_phase_vec[0], v_phase_vec[1], v_ra_vec[0], v_ra_vec[1], angles="xy", scale_units="xy",
+    ax.quiver(*v_ra_vec_start, *v_ra_vec, angles="xy", scale_units="xy",
               scale=1, color="green",
               label=fr"$I_A R_A={{{v_ra_magnitude:.2f}}}\; V \; \angle {{{v_ra_phase_angle:.2f}}}^{{\circ}}$")
 
-    ax.quiver(v_phase_vec[0]+v_ra_vec[0], v_phase_vec[1]+v_ra_vec[1], v_xs_vec[0], v_xs_vec[1], angles="xy", scale_units="xy",
+    ax.quiver(*v_xs_vec_start, *v_xs_vec, angles="xy", scale_units="xy",
               scale=1, color="black",
               label=fr"$I_A jX_S={{{v_xs_magnitude:.2f}}}\; V \; \angle {{{v_xs_phase_angle:.2f}}}^{{\circ}}$")
 
     # Phasor labels
-    origin = (0, 0)
-    v_ra_start = (v_phase_vec[0] + v_ra_vec[0], v_ra_vec[1] + v_phase_vec[1])
+    h.label_vector(ax, origin, v_phase_vec, r"$V_\phi$", "blue", offset_y=-100)
+    h.label_vector(ax, origin, ia_vec, r"$I_A$", "red", offset_x=175, offset_y=-100)
+    h.label_vector(ax, origin, ea_vec, r"$E_A$", "purple", offset_x=-130, offset_y=20)
+    h.label_vector(ax, v_ra_vec_start, v_ra_vec, r"$I_A R_A$", "green", offset_y=-100)
+    h.label_vector(ax, v_xs_vec_start, v_xs_vec, r"$I_A jX_S$", "black", offset_x=50, offset_y=-90)
 
-    h.label_vector(ax, origin, v_phase_vec, r"$V_\phi$", "blue")
-    h.label_vector(ax, origin, ia_vec, r"$I_A$", "red")
-    h.label_vector(ax, origin, ea_vec, r"$E_A$", "purple")
-    h.label_vector(ax, v_ra_start, v_ra_vec, r"$E_A$", "purple")
-
-    # ax.text(v_phase_vec[0]-90, v_phase_vec[1]-100, r"$V_\phi$", color="blue", fontsize=20, weight="bold")
-    # ax.text(ia_vec[0]+175, ia_vec[1]-100, r"$I_A$", color="red", fontsize=20, weight="bold")
-    # ax.text(ea_vec[0]-100, ea_vec[1]+20, r"$E_A$", color="purple", fontsize=20, weight="bold")
-    # ax.text(v_ra_start[0]-90, v_ra_start[1]-100, r"$I_A R_A$", color="green", fontsize=20, weight="bold")
-    # ax.text(v_phase_vec[0]+v_ra_vec[0]+40, v_xs_vec[1]-90, r"$I_A jX_S$", color="black", fontsize=20, weight="bold")
-
-    ax.set_xlim(min(0, ea_vec[0])-200, max(ea_vec[0], v_phase_vec[0]+v_ra_vec[0])+200)
+    ax.set_xlim(min(0, ea_vec[0])-200, max(ea_vec[0], v_phase_vec[0]+v_ra_vec[0])+300)
     ax.set_ylim(min(0, ia_vec[1])-200, max(ea_vec[1], v_phase_vec[1])+200)
     ax.set_aspect("equal")
     ax.set_title('Phasor Diagram - Synchronous Generator')
