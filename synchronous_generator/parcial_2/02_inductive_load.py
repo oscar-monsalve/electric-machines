@@ -58,11 +58,25 @@ def main() -> None:
     fig, ax = plt.subplots(figsize=(10, 7))
     ax.set_aspect("equal")
 
-    ax.quiver(0, 0, v_phase_vec[0], v_phase_vec[1], angles="xy", scale_units="xy", scale=1, color="blue", label=r"$V_{\phi}$")
-    ax.quiver(0, 0, ia_vec[0], ia_vec[1], angles="xy", scale_units="xy", scale=0.04, color="red", label=r"$I_A$ (not to scale)")
-    ax.quiver(0, 0, ea_vec[0], ea_vec[1], angles="xy", scale_units="xy", scale=1, color="purple", label=r"$E_A$")
-    ax.quiver(v_phase_vec[0], v_phase_vec[1], v_ra_vec[0], v_ra_vec[1], angles="xy", scale_units="xy", scale=1, color="green", label=r"$I_A R_A$")
-    ax.quiver(v_phase_vec[0]+v_ra_vec[0], v_phase_vec[1]+v_ra_vec[1], v_xs_vec[0], v_xs_vec[1], angles="xy", scale_units="xy", scale=1, color="black", label=r"$I_A jX_S$")
+    ax.quiver(0, 0, v_phase_vec[0], v_phase_vec[1], angles="xy", scale_units="xy",
+              scale=1, color="blue",
+              label=r"$V_{\phi}$")
+
+    ax.quiver(0, 0, ia_vec[0], ia_vec[1], angles="xy", scale_units="xy",
+              scale=0.04, color="red",
+              label=r"$I_A$ (not to scale)")
+
+    ax.quiver(0, 0, ea_vec[0], ea_vec[1], angles="xy", scale_units="xy",
+              scale=1, color="purple",
+              label=r"$E_A$")
+
+    ax.quiver(v_phase_vec[0], v_phase_vec[1], v_ra_vec[0], v_ra_vec[1], angles="xy", scale_units="xy",
+              scale=1, color="green",
+              label=r"$I_A R_A$")
+
+    ax.quiver(v_phase_vec[0]+v_ra_vec[0], v_phase_vec[1]+v_ra_vec[1], v_xs_vec[0], v_xs_vec[1], angles="xy", scale_units="xy",
+              scale=1, color="black",
+              label=r"$I_A jX_S$")
 
     ax.set_title('Phasor Diagram - Synchronous Generator')
     ax.set_xlabel('Re')
