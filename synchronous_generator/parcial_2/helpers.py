@@ -79,3 +79,19 @@ def phasor_xy_coordinates(phasors: list[tuple[float, float]]) -> list[tuple[floa
         y = r * sin(radians(theta))
         phasor_xy_coordinates.append((x, y))
     return phasor_xy_coordinates
+
+
+def label_vector(ax, start: tuple[float, float], vec: tuple[float, float], text: str, color: str, scale=0.1) -> None:
+    dx, dy = vec
+    vec_magnitude = sqrt(dx**2 + dy**2)
+    if vec_magnitude == 0:
+        offset_x, offset_y = 0
+    else:
+        offset_x = dx / vec_magnitude * scale
+        offset_y = dy / vec_magnitude * scale
+
+    # Label position (tip of vector plus offset)
+    end_x = start[0] + dx + offset_x
+    end_y = start[1] + dy + offset_y
+
+    ax.text(end_x, end_y, text, color=color, fontsize=20, weight="bold", ha="center", va="center")
