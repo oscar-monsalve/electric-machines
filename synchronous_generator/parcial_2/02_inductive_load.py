@@ -3,7 +3,7 @@ import helpers as h
 
 
 # Input data
-XL_CEDULA: complex = 63j  # Últimos dos dígitos de la cédula de los estudiantes para definir a la reactancia de carga
+XL_CEDULA: complex = 72j  # Últimos dos dígitos de la cédula de los estudiantes para definir a la reactancia de carga
 
 # Constants
 ZL:      complex = 175 + XL_CEDULA
@@ -51,7 +51,7 @@ def main() -> None:
     print("f). Phasor diagram values:")
     print(f"         V_phi    : {phase_voltage:.2f} V ∠0°")
     print(f"         E_A      : {ea_magnitud:.2f} V ∠{ea_phase_angle:.2f}°")
-    print(f"         I_A      : {ia_magnitude:.2f} V ∠{ia_phase_angle:.2f}°")
+    print(f"         I_A      : {ia_magnitude:.2f} A ∠{ia_phase_angle:.2f}°")
     print(f"         I_A*R_A  : {v_ra_magnitude:.2f} V  ∠{v_ra_phase_angle:.2f}°")
     print(f"         I_A*jX_S : {v_xs_magnitude:.2f} V ∠{v_xs_phase_angle:.2f}°")
 
