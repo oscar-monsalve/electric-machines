@@ -5,15 +5,15 @@ import scienceplots
 plt.style.use(["science", "notebook", "grid"])
 
 # inputs
-LINE_VOLTAGE = 460  # line-to-line nominal motor voltage (V).
-CONNECTION = 1      # 1 if connected in "wye" or 2 if connected in "delta".
+LINE_VOLTAGE = 200.92  # line-to-line nominal motor voltage (V).
+CONNECTION = 2      # 1 if connected in "wye" or 2 if connected in "delta".
 FREQUENCY = 60      # motor frequency (Hz).
 POLES = 4           # total number of motor poles
-R1 = 0.641          # stator resistance (ohms).
-X1 = 1.106j         # stator reactance (ohms).
-X2 = 0.464j         # stator reactance (ohms).
-XM = 26.3j          # magnetizing reactance (ohms).
-R2 = 0.332          # rotor resistance (ohms).
+R1 = 10.1          # stator resistance (ohms).
+X1 = 7.036j         # stator reactance (ohms).
+X2 = 10.554j         # stator reactance (ohms).
+XM = 130.394j          # magnetizing reactance (ohms).
+R2 = 1.72          # rotor resistance (ohms).
 
 
 def main() -> None:
@@ -82,7 +82,7 @@ def main() -> None:
     plt.ylabel(r"Torque inducido $\tau_{ind}$ (Nm)")
     plt.title(r"Característica par-velocidad del motor")
     plt.xlim(left=0, right=1800)
-    plt.ylim(top=250)
+    # plt.ylim(top=250)
     plt.legend()
     plt.tight_layout()
     plt.grid(True)
