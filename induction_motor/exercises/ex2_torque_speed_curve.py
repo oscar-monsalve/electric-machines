@@ -71,10 +71,10 @@ def main() -> None:
     print(f"b). Par en el arranque -> T en arranque: {torque_at_startup:.2f} Nm.\n")
 
     print(f"c). Si se duplica R2 (2R2: {r2_doubled} ohms),el deslizamiento se duplica,\n    al cual se presenta el par máximo:")
-    print(f"    - Deslizamiento duplicando R2          -> s_max @2R2: {s_max_at_r2_doubled:.4f}.")
-    print(f"    - Velocidad del rotor con 2R2          -> N_m @2R2: {velocity_at_r2_doubled:.2f} rpm.")
-    print(f"    - El torque máximo no depende de R2    -> T_max: {torque_max:.2f} Nm.")
-    print(f"    - Torque al arranque del rotor con 2R2 -> T_arranque @2R2: {torque_at_startup_at_r2_doubled:.2f} Nm.")
+    print(f"    - Deslizamiento con 2R2          -> s_max @2R2: {s_max_at_r2_doubled:.4f}.")
+    print(f"    - Velocidad rotor con 2R2        -> N_m @2R2: {velocity_at_r2_doubled:.2f} rpm.")
+    print(f"    - Torque máximo no depende de R2 -> T_max: {torque_max:.2f} Nm.")
+    print(f"    - Torque al arranque con 2R2     -> T_arranque @2R2: {torque_at_startup_at_r2_doubled:.2f} Nm.")
 
     plt.plot(shaft_velocity_list, torque_list_r2, label=r"$R_2$ original")
     plt.plot(shaft_velocity_list, torque_list_doubled_r2, '-.', label=r"$R_2$ doble")
