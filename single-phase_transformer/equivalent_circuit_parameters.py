@@ -1,4 +1,4 @@
-import numpy as np
+from math import sqrt
 
 
 def transformation_ratio(primary_voltage: float, secondary_voltage: float) -> float:
@@ -38,7 +38,7 @@ def open_circuit_aparent_power(short_circuit_side: str, primary_voltage: float, 
 
 
 def open_circuit_reactive_power(open_circuit_aparent_power: float, open_circuit_active_power: float) -> float:
-    return np.sqrt(open_circuit_aparent_power**2 - open_circuit_active_power**2)
+    return sqrt(open_circuit_aparent_power**2 - open_circuit_active_power**2)
 
 
 def core_resistance_and_reactance(short_circuit_side: str, transformation_ratio: float, primary_voltage: float,
@@ -71,8 +71,8 @@ def core_currents(short_circuit_side: str, primary_voltage: float, secondary_vol
 
 
 def open_circuit_current(if1: float, im1: float, if2: float, im2: float) -> float:
-    primary_open_circuit_current = np.sqrt(if1**2 + im1**2)
-    secondary_open_circuit_current = np.sqrt(if2**2 + im2**2)
+    primary_open_circuit_current = sqrt(if1**2 + im1**2)
+    secondary_open_circuit_current = sqrt(if2**2 + im2**2)
     return primary_open_circuit_current, secondary_open_circuit_current
 
 
@@ -100,7 +100,7 @@ def short_circuit_aparent_power(short_circuit_side: str, short_circuit_voltage: 
 
 
 def short_circuit_reactive_power(short_circuit_aparent_power: float, short_circuit_active_power: float) -> float:
-    return np.sqrt(short_circuit_aparent_power**2 - short_circuit_active_power**2)
+    return sqrt(short_circuit_aparent_power**2 - short_circuit_active_power**2)
 
 
 def equivalent_resistance_and_reactance(short_circuit_active_power: float, short_circuit_reactive_power: float,
