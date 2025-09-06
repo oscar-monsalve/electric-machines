@@ -41,8 +41,11 @@ def open_circuit_reactive_power(open_circuit_aparent_power: float, open_circuit_
     return sqrt(open_circuit_aparent_power**2 - open_circuit_active_power**2)
 
 
-def core_resistance_and_reactance(short_circuit_side: str, transformation_ratio: float, primary_voltage: float,
-                                  secondary_voltage: float, open_circuit_active_power: float,
+def core_resistance_and_reactance(short_circuit_side: str,
+                                  transformation_ratio: float,
+                                  primary_voltage: float,
+                                  secondary_voltage: float,
+                                  open_circuit_active_power: float,
                                   open_circuit_reactive_power: float) -> float:
 
     if short_circuit_side == "primary":
@@ -59,8 +62,12 @@ def core_resistance_and_reactance(short_circuit_side: str, transformation_ratio:
         return rm1, xm1, rm2, xm2
 
 
-def core_currents(short_circuit_side: str, primary_voltage: float, secondary_voltage: float,
-                  primary_core_resistance: float, primary_core_reactance: float, secondary_core_resistance: float,
+def core_currents(short_circuit_side: str,
+                  primary_voltage: float,
+                  secondary_voltage: float,
+                  primary_core_resistance: float,
+                  primary_core_reactance: float,
+                  secondary_core_resistance: float,
                   secondary_core_reactance: float) -> float:
 
     if1 = primary_voltage / primary_core_resistance
@@ -91,7 +98,9 @@ def short_circuit_test_side(short_circuit_voltage: float, primary_voltage: float
         return "secondary"
 
 
-def short_circuit_aparent_power(short_circuit_side: str, short_circuit_voltage: float, primary_current: float,
+def short_circuit_aparent_power(short_circuit_side: str,
+                                short_circuit_voltage: float,
+                                primary_current: float,
                                 secondary_current: float) -> float:
     if short_circuit_side == "primary":
         return short_circuit_voltage * primary_current
@@ -103,8 +112,10 @@ def short_circuit_reactive_power(short_circuit_aparent_power: float, short_circu
     return sqrt(short_circuit_aparent_power**2 - short_circuit_active_power**2)
 
 
-def equivalent_resistance_and_reactance(short_circuit_active_power: float, short_circuit_reactive_power: float,
-                                        primary_current: float, secondary_current: float) -> float:
+def equivalent_resistance_and_reactance(short_circuit_active_power: float,
+                                        short_circuit_reactive_power: float,
+                                        primary_current: float,
+                                        secondary_current: float) -> float:
     re1 = short_circuit_active_power / primary_current ** 2
     xe1 = short_circuit_reactive_power / primary_current ** 2
     re2 = short_circuit_active_power / secondary_current ** 2
@@ -113,8 +124,10 @@ def equivalent_resistance_and_reactance(short_circuit_active_power: float, short
     return re1, xe1, re2, xe2
 
 
-def primary_secondary_impedances(transformation_ratio: float, primary_equivalent_resistance: float,
-                                 primary_equivalent_reactance: float, secondary_equivalent_resistance: float,
+def primary_secondary_impedances(transformation_ratio: float,
+                                 primary_equivalent_resistance: float,
+                                 primary_equivalent_reactance: float,
+                                 secondary_equivalent_resistance: float,
                                  secondary_equivalent_reactance: float) -> float:
     r1 = primary_equivalent_resistance / 2
     x1 = primary_equivalent_reactance / 2

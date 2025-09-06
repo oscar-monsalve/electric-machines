@@ -25,16 +25,25 @@ def load_active_reactive_powers(load_apparent_power: float, phase_angle: float) 
     return load_active_power, load_reactive_power
 
 
-def secondary_open_circuit_voltage(phase_angle: float, secondary_voltage: float, load_current: float,
-                                   secondary_equivalent_resistance: float, secondary_equivalent_reactance:
-                                   float) -> float:
-    return sqrt((secondary_voltage*cos(deg2rad(phase_angle))+load_current*secondary_equivalent_resistance)**2 + (secondary_voltage*sin(deg2rad(phase_angle))+load_current*secondary_equivalent_reactance)**2)
+def secondary_open_circuit_voltage(phase_angle: float, secondary_voltage: float,
+                                   load_current: float,
+                                   secondary_equivalent_resistance: float,
+                                   secondary_equivalent_reactance: float) -> float:
+    v_re2 = load_current * secondary_equivalent_resistance
+    v_xe2 = load_current * secondary_equivalent_reactance
+    return sqrt((secondary_voltage*cos(deg2rad(phase_angle)) + v_re2)**2 + (secondary_voltage * sin(deg2rad(phase_angle)) + v_xe2)**2)
 
 
 def voltage_regulation(secondary_open_circuit_voltage: float, secondary_voltage: float) -> float:
     return ((secondary_open_circuit_voltage - secondary_voltage) / (secondary_voltage)) * 100
 
 
-def efficiency(phase_angle: float, secondary_voltage: float, load_current: float, secondary_equivalent_resistance:
-               float, open_circuit_power: float) -> float:
-    return ((secondary_voltage*load_current*cos(rad2deg(phase_angle))) / (secondary_voltage*load_current*cos(rad2deg(phase_angle))+secondary_equivalent_resistance*load_current**2+open_circuit_power)) * 100
+def efficiency(phase_angle: float,
+               secondary_voltage: float,
+               load_current: float,
+               secondary_equivalent_resistance: float,
+               open_circuit_power: float) -> float:
+
+    p_out = secondary_voltage * load_current * cos(rad2deg(phase_angle))
+    p_in = p_out + secondary_equivalent_resistance * load_current**2 + open_circuit_power
+    return (p_out / p_in) * 100
