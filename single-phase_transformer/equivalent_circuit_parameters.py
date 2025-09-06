@@ -15,7 +15,9 @@ def nominal_current(nominal_aparent_power: float, nominal_voltage: float) -> flo
     return nominal_aparent_power / nominal_voltage
 
 
-def open_circuit_test_side(open_circuit_current: float, primary_current: float, secondary_current: float) -> str:
+def open_circuit_test_side(open_circuit_current: float,
+                           primary_current: float,
+                           secondary_current: float) -> str:
     """
     open_circuit_test_side() -> str.
     Determines if the open-circuit test was performed at the primary or secondary.
@@ -30,14 +32,18 @@ def open_circuit_test_side(open_circuit_current: float, primary_current: float, 
         return "secondary"
 
 
-def open_circuit_aparent_power(short_circuit_side: str, primary_voltage: float, secondary_voltage: float, open_circuit_current: float) -> float:
+def open_circuit_aparent_power(short_circuit_side: str,
+                               primary_voltage: float,
+                               secondary_voltage: float,
+                               open_circuit_current: float) -> float:
     if short_circuit_side == "primary":
         return primary_voltage * open_circuit_current
     if short_circuit_side == "secondary":
         return secondary_voltage * open_circuit_current
 
 
-def open_circuit_reactive_power(open_circuit_aparent_power: float, open_circuit_active_power: float) -> float:
+def open_circuit_reactive_power(open_circuit_aparent_power: float,
+                                open_circuit_active_power: float) -> float:
     return sqrt(open_circuit_aparent_power**2 - open_circuit_active_power**2)
 
 
@@ -83,7 +89,9 @@ def open_circuit_current(if1: float, im1: float, if2: float, im2: float) -> floa
     return primary_open_circuit_current, secondary_open_circuit_current
 
 
-def short_circuit_test_side(short_circuit_voltage: float, primary_voltage: float, secondary_voltage: float) -> str:
+def short_circuit_test_side(short_circuit_voltage: float,
+                            primary_voltage: float,
+                            secondary_voltage: float) -> str:
     """
     short_circuit_test_side() -> str.
     Determines if the short-circuit test was performed at the primary or secondary.
