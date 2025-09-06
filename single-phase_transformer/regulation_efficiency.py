@@ -25,7 +25,8 @@ def load_active_reactive_powers(load_apparent_power: float, phase_angle: float) 
     return load_active_power, load_reactive_power
 
 
-def secondary_open_circuit_voltage(phase_angle: float, secondary_voltage: float,
+def secondary_open_circuit_voltage(phase_angle: float,
+                                   secondary_voltage: float,
                                    load_current: float,
                                    secondary_equivalent_resistance: float,
                                    secondary_equivalent_reactance: float) -> float:
