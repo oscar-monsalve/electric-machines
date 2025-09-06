@@ -88,13 +88,13 @@ def main() -> None:
     print(f"        R2: {r2:.6f} ohm.\n        X2: {x2:.6f} ohm.\n")
 
     print("Voltage Regulation and efficiency:")
-    print(f"- Load aparent power -> S_L: {sc:.2f} VA")
-    print(f"- Load current -> I_L2: {ic2:.2f} A.")
-    print(f"- Phase angle -> phi: {phase_angle:.2f}°.")
-    print(f"- Load active power-> P_L: {pl:.2f} W.")
-    print(f"- Load reactive power-> Q_L: {ql:.2f} VAR.")
+    print(f"- Load aparent power             -> S_L: {sc:.2f} VA")
+    print(f"- Load current                   -> I_L2: {ic2:.2f} A.")
+    print(f"- Phase angle                    -> phi: {phase_angle:.2f}°.")
+    print(f"- Load active power              -> P_L: {pl:.2f} W.")
+    print(f"- Load reactive power            -> Q_L: {ql:.2f} VAR.")
     print(f"- Secondary open-circuit voltage -> V20: {v20:.2f} V.")
-    print(f"- Efficiency -> eta: {efficiency:.2f} %.")
+    print(f"- Efficiency                     -> eta: {efficiency:.2f} %.")
 
 
 if __name__ == "__main__":
