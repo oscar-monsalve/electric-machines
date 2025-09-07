@@ -1,6 +1,10 @@
 import equivalent_circuit_parameters as model
 import regulation_efficiency
-
+from numpy import linspace
+from math import acos, degrees
+import matplotlib.pyplot as plt
+import scienceplots
+plt.style.use(["science", "notebook", "grid"])
 # For a single-phase transformer of 15 kVA 7600/220 V, which in open-circuit takes 2 A and 200 W, and in
 # short-circuit with 300 V at a nominal current dissipates 220 W. Determine the equivalent circuit parameters,
 # the voltage regulation and the efficiency for the following loads:
@@ -56,7 +60,26 @@ def main() -> None:
     phase_angle = regulation_efficiency.phase_angle()
     pl, ql = regulation_efficiency.load_active_reactive_powers(sc, phase_angle)
     v20 = regulation_efficiency.secondary_open_circuit_voltage(phase_angle, vn2, ic2, re2, xe2)
+    voltaje_regulation = regulation_efficiency.voltage_regulation(v20, vn2)
     efficiency = regulation_efficiency.efficiency(phase_angle, vn2, ic2, re2, p0)
+
+    # Plot calculation for efficiency and voltage regulation curves
+    solution_space_plot = 200
+    load_percentage_plot = linspace(0, 100, num=solution_space_plot)
+
+    # v_regulation_plot = []
+    efficiency_plot_each_fp = []  # list of lists for each power factor
+    power_factors_set = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+
+    for fp in power_factors_set:
+        fp_efficiencies = []
+        for i in load_percentage_plot:
+            sc_var = (sn * i) / 100
+            ic2_var = regulation_efficiency.load_current(sc_var, vn2)
+            phase_angle_var = degrees(acos(fp))
+            efficiency_var = regulation_efficiency.efficiency(phase_angle_var, vn2, ic2_var, re2, p0)
+            fp_efficiencies.append(efficiency_var)
+        efficiency_plot_each_fp.append(fp_efficiencies)
 
     print(f"- Transformation ratio -> a: {a:.2f}.")
     print(f"- Primary nominal current -> IN1: {in1:.2f} A.")
@@ -94,7 +117,24 @@ def main() -> None:
     print(f"- Load active power              -> P_L: {pl:.2f} W.")
     print(f"- Load reactive power            -> Q_L: {ql:.2f} VAR.")
     print(f"- Secondary open-circuit voltage -> V20: {v20:.2f} V.")
+    print(f"- Voltage regulation             -> ΔV%: {voltaje_regulation:.2f} %.")
     print(f"- Efficiency                     -> eta: {efficiency:.2f} %.")
+
+    # Plots: efficiency vs %load (constant pf)
+    for index, fp in enumerate(power_factors_set):
+        plt.plot(load_percentage_plot,
+                 efficiency_plot_each_fp[index],
+                 label=f"fp={fp}")
+
+    plt.xlabel(r"Porcentaje de carga (%)")
+    plt.ylabel(r"Eficiencia $\eta$ (%)")
+    plt.title(r"Eficiencia en función del porcentaje de carga para cada valor de fp")
+    plt.xlim(left=0, right=100)
+    # plt.ylim(top=250)
+    plt.legend()
+    plt.tight_layout()
+    plt.grid(True)
+    plt.show()
 
 
 if __name__ == "__main__":
