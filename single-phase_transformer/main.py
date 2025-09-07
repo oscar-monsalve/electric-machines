@@ -5,6 +5,8 @@ from math import acos, degrees
 import matplotlib.pyplot as plt
 import scienceplots
 plt.style.use(["science", "notebook", "grid"])
+
+# --- Exercise example ---
 # For a single-phase transformer of 15 kVA 7600/220 V, which in open-circuit takes 2 A and 200 W, and in
 # short-circuit with 300 V at a nominal current dissipates 220 W. Determine the equivalent circuit parameters,
 # the voltage regulation and the efficiency for the following loads:
