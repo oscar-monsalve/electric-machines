@@ -63,24 +63,64 @@ def main() -> None:
     voltaje_regulation = regulation_efficiency.voltage_regulation(v20, vn2)
     efficiency = regulation_efficiency.efficiency(phase_angle, vn2, ic2, re2, p0)
 
-    # Plot calculation for efficiency and voltage regulation curves
-    solution_space_plot = 200
-    load_percentage_plot = linspace(0, 100, num=solution_space_plot)
-
-    # v_regulation_plot = []
-    efficiency_plot_each_fp = []  # list of lists for each power factor
+    # --- Plot calculation for efficiency/voltage regulation vs %load (constant pf) ---
+    solution_space = 200
+    load_percentage_solution_space = linspace(0, 100, num=solution_space)
     power_factors_set = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
 
-    for fp in power_factors_set:
+    efficiency_plot_each_fp = []  # list of lists for each power factor
+    voltage_regulation_each_fp = []  # list of lists for each power factor
+
+    for pf in power_factors_set:
         fp_efficiencies = []
-        for i in load_percentage_plot:
+        fp_voltage_regulations = []
+        for i in load_percentage_solution_space:
             sc_var = (sn * i) / 100
             ic2_var = regulation_efficiency.load_current(sc_var, vn2)
-            phase_angle_var = degrees(acos(fp))
-            efficiency_var = regulation_efficiency.efficiency(phase_angle_var, vn2, ic2_var, re2, p0)
-            fp_efficiencies.append(efficiency_var)
-        efficiency_plot_each_fp.append(fp_efficiencies)
+            phase_angle_var = degrees(acos(pf))
 
+            # Voltage regulation
+            v20_var = regulation_efficiency.secondary_open_circuit_voltage(phase_angle_var, vn2, ic2_var, re2, xe2)
+            voltaje_regulation_var = regulation_efficiency.voltage_regulation(v20_var, vn2)
+
+            # Efficiency
+            efficiency_var = regulation_efficiency.efficiency(phase_angle_var, vn2, ic2_var, re2, p0)
+
+            fp_efficiencies.append(efficiency_var)
+            fp_voltage_regulations.append(voltaje_regulation_var)
+
+        efficiency_plot_each_fp.append(fp_efficiencies)
+        voltage_regulation_each_fp.append(fp_voltage_regulations)
+
+    # --- Plot calculation for efficiency/voltage regulation vs fp (constat %load) ---
+    power_factor_solution_space = linspace(0.1, 1, num=solution_space)
+    load_percentage_set = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
+    efficiency_plot_each_load = []  # list of lists for each %load
+    voltage_regulation_each_load = []  # list of lists for each %load
+
+    for load in load_percentage_set:
+        load_efficiencies = []
+        load_voltage_regulations = []
+        for pf in power_factor_solution_space:
+            sc_var = (sn * (load/100))
+            ic2_var = regulation_efficiency.load_current(sc_var, vn2)
+            phase_angle_var = degrees(acos(pf))
+
+            # Voltage regulation
+            v20_var = regulation_efficiency.secondary_open_circuit_voltage(phase_angle_var, vn2, ic2_var, re2, xe2)
+            voltaje_regulation_var = regulation_efficiency.voltage_regulation(v20_var, vn2)
+
+            # Efficiency
+            efficiency_var = regulation_efficiency.efficiency(phase_angle_var, vn2, ic2_var, re2, p0)
+
+            load_efficiencies.append(efficiency_var)
+            load_voltage_regulations.append(voltaje_regulation_var)
+
+        efficiency_plot_each_load.append(load_efficiencies)
+        voltage_regulation_each_load.append(load_voltage_regulations)
+
+    # Print solution
     print(f"- Transformation ratio -> a: {a:.2f}.")
     print(f"- Primary nominal current -> IN1: {in1:.2f} A.")
     print(f"- Secondary nominal current -> IN2: {in2:.2f} A.\n")
@@ -120,20 +160,70 @@ def main() -> None:
     print(f"- Voltage regulation             -> ΔV%: {voltaje_regulation:.2f} %.")
     print(f"- Efficiency                     -> eta: {efficiency:.2f} %.")
 
-    # Plots: efficiency vs %load (constant pf)
-    for index, fp in enumerate(power_factors_set):
-        plt.plot(load_percentage_plot,
+    # --- Efficiency vs %load (pf constant) ---
+    plt.figure()
+    for index, pf in enumerate(power_factors_set):
+        plt.plot(load_percentage_solution_space,
                  efficiency_plot_each_fp[index],
-                 label=f"fp={fp}")
+                 label=f"fp={pf}")
 
     plt.xlabel(r"Porcentaje de carga (%)")
     plt.ylabel(r"Eficiencia $\eta$ (%)")
-    plt.title(r"Eficiencia en función del porcentaje de carga para cada valor de fp")
+    plt.title(r"Eficiencia en función del porcentaje de carga para cada condición de fp")
     plt.xlim(left=0, right=100)
-    # plt.ylim(top=250)
-    plt.legend()
+    plt.legend(fontsize=10)
     plt.tight_layout()
     plt.grid(True)
+    # plt.show()
+
+    # --- Voltage regulation vs %load (pf constant)---
+    plt.figure()
+    for index, pf in enumerate(power_factors_set):
+        plt.plot(load_percentage_solution_space,
+                 voltage_regulation_each_fp[index],
+                 label=f"fp={pf}")
+
+    plt.xlabel(r"Porcentaje de carga (%)")
+    plt.ylabel(r"Regulación de voltaje (%)")
+    plt.title(r"Regulación de voltaje en función del porcentaje de carga para cada condición de fp")
+    plt.xlim(left=0, right=100)
+    plt.legend(fontsize=10)
+    plt.tight_layout()
+    plt.grid(True)
+    # plt.show()
+
+    # --- Efficiency vs pf (%load constant) ---
+    plt.figure()
+    for index, load in enumerate(load_percentage_set):
+        plt.plot(power_factor_solution_space,
+                 efficiency_plot_each_load[index],
+                 label=rf"$S_C$={load}%")
+
+    plt.xlabel(r"Factor de potencia $(-)$")
+    plt.ylabel(r"Eficiencia $\eta$ (%)")
+    plt.title(r"Eficiencia en función del factor de potencia para cada condición de carga")
+    plt.xlim(left=0.1, right=1)
+    plt.legend(fontsize=10)
+    plt.tight_layout()
+    plt.grid(True)
+    # plt.show()
+
+    # --- Voltage regulation vs pf (%load constant) ---
+    plt.figure()
+    for index, load in enumerate(load_percentage_set):
+        plt.plot(power_factor_solution_space,
+                 voltage_regulation_each_load[index],
+                 label=rf"$S_C$={load}%")
+
+    plt.xlabel(r"Factor de potencia $(-)$")
+    plt.ylabel(r"Regulación de voltaje $\Delta V\%$ (%)")
+    plt.title(r"Regulación de voltaje en función del factor de potencia para cada condición de carga")
+    plt.xlim(left=0.1, right=1)
+    # plt.ylim(top=5)
+    plt.legend(fontsize=10)
+    plt.tight_layout()
+    plt.grid(True)
+
     plt.show()
 
 
