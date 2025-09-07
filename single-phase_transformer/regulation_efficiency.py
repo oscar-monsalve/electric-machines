@@ -45,6 +45,6 @@ def efficiency(phase_angle: float,
                secondary_equivalent_resistance: float,
                open_circuit_power: float) -> float:
 
-    p_out = secondary_voltage * load_current * cos(rad2deg(phase_angle))
+    p_out = secondary_voltage * load_current * cos(deg2rad(phase_angle))
     p_in = p_out + secondary_equivalent_resistance * load_current**2 + open_circuit_power
     return (p_out / p_in) * 100
