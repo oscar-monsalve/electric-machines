@@ -20,12 +20,14 @@ RE_F2: float = 4.2         # Equivalent resistance refered to the secondary (per
 XE_F2: float = 10.0        # Equivalent reactance refered to the secondary (per phase) in ohms
 P_0:   float = 2200.0      # Secondary Open-circuit active power in W
 
-S_C: list(float) = [S_N, 0.5*S_N]
+PARTIAL_LOAD: float = 0.5
+S_C: list(float) = [S_N, PARTIAL_LOAD*S_N]
+F_P: list(float) = [0.9, 1.0]
 
-S_C1:   float = S_N        # Load's apparent power for full load case
-FP_1:   float = 0.9        # Power factor for full load case
-S_C2:   float = 0.5 * S_N  # Load's apparent power for partial load case
-FP_2:   float = 1.0        # Power factor for full partial load case
+# S_C1:   float = S_N        # Load's apparent power for full load case
+# FP_1:   float = 0.9        # Power factor for full load case
+# S_C2:   float = 0.5 * S_N  # Load's apparent power for partial load case
+# FP_2:   float = 1.0        # Power factor for full partial load case
 
 
 def main() -> None:
