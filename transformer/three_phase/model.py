@@ -1,10 +1,10 @@
 from math import cos, sin, acos, sqrt
 
 
-def voltage_level_from_connection(primary_connection: int,
-                                  secondary_connection: int,
-                                  vl1: float,
-                                  vl2: float) -> float:
+def line_phase_voltages(primary_connection: int,
+                        secondary_connection: int,
+                        vl1: float,
+                        vl2: float) -> float:
     if primary_connection == 1 and secondary_connection == 1:
         pass
 
