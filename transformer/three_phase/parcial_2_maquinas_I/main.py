@@ -13,17 +13,17 @@ al secundario (por fase) es 𝑍𝑒𝑞,f2 = 𝑅𝑒,f2 + 𝑗𝑋e,f2 = 4.2 +
 import model
 
 # ---- Variable data ----
-pf:         [float] = [0.8, 0.1]  # Load's power factor cases
-partial_load: float = 0.5         # Load percentage of nominal apparent power
+pf:            [float] = [0.8, 1]  # Load's power factor cases
+load_percentage: float = 0.5       # Load's percentage of nominal apparent power
 
 # ---- Constant data ----
-S_N:   float = 100_000_000.0   # Nominal power in VA
-A_S:   float = 3.46        # Simple transformation ratio
-V_L1:  float = 230_000       # Primary line voltage in V
-RE_F2: float = 2        # Equivalent resistance refered to the secondary (per phase) in ohms
-XE_F2: float = 7.98        # Equivalent reactance refered to the secondary (per phase) in ohms
-P_0:   float = 1_080_000      # Secondary Open-circuit active power in W
-S_C: [float] = [S_N, partial_load*S_N]
+S_N:   float = 100_000_000.0               # Nominal power in VA
+A_S:   float = 3.46                        # Simple transformation ratio
+V_L1:  float = 230_000                     # Primary line voltage in V
+RE_F2: float = 2                           # Equivalent resistance refered to the secondary (per phase) in ohms
+XE_F2: float = 7.98                        # Equivalent reactance refered to the secondary (per phase) in ohms
+P_0:   float = 1_080_000                   # Secondary Open-circuit active power in W
+S_C: [float] = [S_N, load_percentage*S_N]  # Load percentage cases
 
 
 def main() -> None:
@@ -56,12 +56,12 @@ def main() -> None:
     # Print solution
     print(f"a). V_L2 : {vl2:.2f} V.")
     print(f"b). I_L1 : {il1:.2f} A.")
-    print(f"c). Efficiency and voltage regulation for S_C = {S_C[0]:,} VA")
-    print(f"    η: {efficiency_list[0]:.2f} %.")
-    print(f"    %ΔV: {regulation_list[0]:.2f} % (V_20 = {v20_list[0]:.2f} V).")
-    print(f"c). Efficiency and voltage regulation for S_C = {S_C[1]:,} VA")
-    print(f"    η: {efficiency_list[1]:.2f} %.")
-    print(f"    %ΔV: {regulation_list[1]:.2f} % (V_20 = {v20_list[1]:.2f} V).")
+    print(f"c). Efficiency and voltage regulation for S_C = {S_C[0]:,} VA (fp={pf[0]}):")
+    print(f"    - η: {efficiency_list[0]:.2f}%.")
+    print(f"    - %ΔV: {regulation_list[0]:.2f}% (V_20 = {v20_list[0]:.2f} V).")
+    print(f"c). Efficiency and voltage regulation for S_C = {S_C[1]:,} VA (fp={pf[1]}):")
+    print(f"    - η: {efficiency_list[1]:.2f}%.")
+    print(f"    - %ΔV: {regulation_list[1]:.2f}% (V_20 = {v20_list[1]:.2f} V).")
 
 
 if __name__ == "__main__":
