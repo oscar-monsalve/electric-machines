@@ -12,19 +12,22 @@ al secundario (por fase) es 𝑍𝑒𝑞,f2 = 𝑅𝑒,f2 + 𝑗𝑋e,f2 = 4.2 +
 
 import model
 
-# ---- Variable data ----
-pf:         [float] = [0.8, 0.1]  # Load's power factor cases
-partial_load: float = 0.5         # Load percentage of nominal apparent power
+# ---- Input data ----
+S_N:   float = 500_000.0   # Nominal power in VA
+A_S:   float = 10.0        # Simple transformation ratio
+V_L1:  float = 13800.0     # Primary line voltage in V
+RE_F2: float = 4.2         # Equivalent resistance refered to the secondary (per phase) in ohms
+XE_F2: float = 10.0        # Equivalent reactance refered to the secondary (per phase) in ohms
+P_0:   float = 2200.0      # Secondary Open-circuit active power in W
 
-# ---- Constant data ----
-S_N:   float = 100_000_000.0   # Nominal power in VA
-A_S:   float = 3.46        # Simple transformation ratio
-V_L1:  float = 230_000       # Primary line voltage in V
-RE_F2: float = 2        # Equivalent resistance refered to the secondary (per phase) in ohms
-XE_F2: float = 7.98        # Equivalent reactance refered to the secondary (per phase) in ohms
-P_0:   float = 1_080_000      # Secondary Open-circuit active power in W
-S_C: [float] = [S_N, partial_load*S_N]
+PARTIAL_LOAD: float = 0.5
+S_C: [float] = [S_N, PARTIAL_LOAD*S_N]
+F_P: [float] = [0.9, 1.0]
 
+# S_C1:   float = S_N        # Load's apparent power for full load case
+# FP_1:   float = 0.9        # Power factor for full load case
+# S_C2:   float = 0.5 * S_N  # Load's apparent power for partial load case
+# FP_2:   float = 1.0        # Power factor for full partial load case
 
 def main() -> None:
     vl2 = model.line_voltage_secondary(V_L1, A_S)
@@ -34,10 +37,8 @@ def main() -> None:
     phi_list = []
     icf2_list = []
     efficiency_list = []
-    v20_list = []
-    regulation_list = []
 
-    for i in pf:
+    for i in F_P:
         phi_i = model.power_factor_angle(i)
         phi_list.append(phi_i)
 
@@ -47,21 +48,15 @@ def main() -> None:
 
     for i, _ in enumerate(S_C):
         efficiency_i = model.efficiency(vf2, icf2_list[i], phi_list[i], RE_F2, P_0)
-        v20_i = model.open_circuit_voltage_secondary(vf2, icf2_list[i], phi_list[i], RE_F2, XE_F2)
-        regulation_i = model.voltage_regulation(v20_i, vf2)
         efficiency_list.append(efficiency_i)
-        v20_list.append(v20_i)
-        regulation_list.append(regulation_i)
+    # efficiency_1 = model.efficiency(vf2, icf2, phi1, RE_F2, P_0)
 
     # Print solution
     print(f"a). V_L2 : {vl2:.2f} V.")
     print(f"b). I_L1 : {il1:.2f} A.")
-    print(f"c). Efficiency and voltage regulation for S_C = {S_C[0]:,} VA")
-    print(f"    η: {efficiency_list[0]:.2f} %.")
-    print(f"    %ΔV: {regulation_list[0]:.2f} % (V_20 = {v20_list[0]:.2f} V).")
-    print(f"c). Efficiency and voltage regulation for S_C = {S_C[1]:,} VA")
-    print(f"    η: {efficiency_list[1]:.2f} %.")
-    print(f"    %ΔV: {regulation_list[1]:.2f} % (V_20 = {v20_list[1]:.2f} V).")
+    print(f"c). efficiency_1.  : {efficiency_1:.2f} %.")
+    print(f"c). p_out : {p_out:.2f} W.")
+    print(f"c). p_cu  : {p_cu:.2f} W.")
 
 
 if __name__ == "__main__":
