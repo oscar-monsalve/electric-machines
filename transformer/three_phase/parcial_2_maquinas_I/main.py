@@ -1,8 +1,8 @@
 """
-Un transformador trifásico de 500 kVA, con conexión Yd, recibe en el primario una tensión línea a línea
-de 13.8 kV. Su relación de transformación simple es 𝑎𝑠 = 10. La impedancia equivalente del transformador referida
-al secundario (por fase) es 𝑍𝑒𝑞,f2 = 𝑅𝑒,f2 + 𝑗𝑋e,f2 = 4.2 + 𝑗10 Ω. Las pérdidas trifásicas de vacío son
-𝑃0,3𝜙 = 2200 𝑊. De acuerdo con lo anterior determinar:
+Un transformador trifásico de 100 MVA, con conexión Yd, recibe en el primario una tensión línea a línea
+de 230 kV. Su relación de transformación simple es 𝑎𝑠 = 3.46. La impedancia equivalente del transformador referida
+al secundario (por fase) es 𝑍𝑒𝑞,f2 = 𝑅𝑒,f2 + 𝑗𝑋e,f2 = 2 + 𝑗7.98 Ω. Las pérdidas trifásicas de vacío son
+𝑃0,3𝜙 = 1.08 M𝑊. De acuerdo con lo anterior determinar:
     a) La tensión de línea del secundario 𝑉𝐿2 .
     b) La corriente de línea del primario 𝐼𝐿1 a plena carga.
     c) La eficiencia y regulación de voltaje del transformador para los siguientes casos:
@@ -13,8 +13,8 @@ al secundario (por fase) es 𝑍𝑒𝑞,f2 = 𝑅𝑒,f2 + 𝑗𝑋e,f2 = 4.2 +
 import model
 
 # ---- Variable data ----
-pf:            [float] = [0.8, 1]  # Load's power factor cases
-load_percentage: float = 0.5       # Load's percentage of nominal apparent power
+pf:            [float] = [0.7, 0.4]  # Load's power factor cases
+load_percentage: float = 0.9         # Load's percentage of nominal apparent power
 
 # ---- Constant data ----
 S_N:   float = 100_000_000.0               # Nominal power in VA
