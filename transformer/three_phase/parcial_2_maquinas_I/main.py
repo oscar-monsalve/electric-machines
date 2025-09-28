@@ -5,9 +5,9 @@ al secundario (por fase) es 𝑍𝑒𝑞,f2 = 𝑅𝑒,f2 + 𝑗𝑋e,f2 = 2 + �
 𝑃0,3𝜙 = 1.08 M𝑊. De acuerdo con lo anterior determinar:
     a) La tensión de línea del secundario 𝑉𝐿2 .
     b) La corriente de línea del primario 𝐼𝐿1 a plena carga.
-    c) La eficiencia y regulación de voltaje del transformador para los siguientes casos:
-        - A plena carga nominal para 𝑓𝑝 = 0.9 ↓.
-        - Al 50% de la carga nominal para 𝑓𝑝 = 1.
+    c) La eficiencia y regulación de voltaje del transformador para las siguientes cargas eléctricas:
+        1. A plena carga nominal para un 𝑓𝑝 = _____.
+        2. Carga al 50% de la carga nominal para un 𝑓𝑝 = _____.
 """
 
 import model

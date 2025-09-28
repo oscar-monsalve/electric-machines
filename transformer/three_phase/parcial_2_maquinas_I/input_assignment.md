@@ -4,7 +4,7 @@ aliases: []
 tags: []
 ---
 
-# Variable power factor pf
+# Variable power factor pf (question C.1 and C.2)
 
 - [x] pf_group_1 = (0.1, 1.0)
 - [x] pf_group_2 = (0.2, 0.9)
@@ -16,7 +16,7 @@ tags: []
 - [x] pf_group_8 = (0.8, 0.3)
 - [x] pf_group_9 = (0.7, 0.4)
 
-# Variable load percentage
+# Variable load percentage (question C.2)
 
 - [x] %sc_group_1 = 0.1
 - [x] %sc_group_2 = 0.2
