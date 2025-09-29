@@ -5,7 +5,6 @@ tags: []
 ---
 
 # Variable power factor pf (question C.1 and C.2)
-
 - [x] pf_group_1 = (0.1, 1.0)
 - [x] pf_group_2 = (0.2, 0.9)
 - [x] pf_group_3 = (0.3, 0.8)
@@ -18,12 +17,12 @@ tags: []
 
 # Variable load percentage (question C.2)
 
-- [x] %sc_group_1 = 0.1
-- [x] %sc_group_2 = 0.2
-- [x] %sc_group_3 = 0.3
-- [x] %sc_group_4 = 0.4
-- [x] %sc_group_5 = 0.5
-- [x] %sc_group_6 = 0.6
-- [x] %sc_group_7 = 0.7
-- [x] %sc_group_8 = 0.8
-- [x] %sc_group_9 = 0.9
+- [x] %sc_group_1 = 10
+- [x] %sc_group_2 = 20
+- [x] %sc_group_3 = 30
+- [x] %sc_group_4 = 40
+- [x] %sc_group_5 = 50
+- [x] %sc_group_6 = 60
+- [x] %sc_group_7 = 70
+- [x] %sc_group_8 = 80
+- [x] %sc_group_9 = 90

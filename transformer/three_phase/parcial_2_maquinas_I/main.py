@@ -13,8 +13,8 @@ al secundario (por fase) es 𝑍𝑒𝑞,f2 = 𝑅𝑒,f2 + 𝑗𝑋e,f2 = 2 + �
 import model
 
 # ---- Variable data ----
-pf:            [float] = [0.7, 0.4]  # Load's power factor cases
-load_percentage: float = 0.9         # Load's percentage of nominal apparent power
+pf:            [float] = [0.1, 1.0]  # Load's power factor cases
+load_percentage: float = 0.1         # Load's percentage of nominal apparent power
 
 # ---- Constant data ----
 S_N:   float = 100_000_000.0               # Nominal power in VA
