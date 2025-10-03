@@ -13,8 +13,8 @@ al secundario (por fase) es 𝑍𝑒𝑞,f2 = 𝑅𝑒,f2 + 𝑗𝑋e,f2 = 2 + �
 import model
 
 # ---- Variable data ----
-pf:            [float] = [0.1, 1.0]  # Load's power factor cases
-load_percentage: float = 0.1         # Load's percentage of nominal apparent power
+pf:            [float] = [0.8, 0.3]  # Load's power factor cases
+load_percentage: float = 0.8         # Load's percentage of nominal apparent power
 
 # ---- Constant data ----
 S_N:   float = 100_000_000.0               # Nominal power in VA
@@ -33,6 +33,8 @@ def main() -> None:
 
     phi_list = []
     icf2_list = []
+    p_out_list = []
+    p_cu_list = []
     efficiency_list = []
     v20_list = []
     regulation_list = []
@@ -46,9 +48,12 @@ def main() -> None:
         icf2_list.append(icf2_i)
 
     for i, _ in enumerate(S_C):
-        efficiency_i = model.efficiency(vf2, icf2_list[i], phi_list[i], RE_F2, P_0)
+        efficiency_i, p_out_i, p_cu_i = model.efficiency(vf2, icf2_list[i], phi_list[i], RE_F2, P_0)
         v20_i = model.open_circuit_voltage_secondary(vf2, icf2_list[i], phi_list[i], RE_F2, XE_F2)
         regulation_i = model.voltage_regulation(v20_i, vf2)
+
+        p_out_list.append(p_out_i)
+        p_cu_list.append(p_cu_i)
         efficiency_list.append(efficiency_i)
         v20_list.append(v20_i)
         regulation_list.append(regulation_i)
@@ -59,9 +64,20 @@ def main() -> None:
     print(f"c). Efficiency and voltage regulation for S_C = {S_C[0]:,} VA (fp={pf[0]}):")
     print(f"    - η: {efficiency_list[0]:.2f}%.")
     print(f"    - %ΔV: {regulation_list[0]:.2f}% (V_20 = {v20_list[0]:.2f} V).")
+    print("     Datos calculados:")
+    print(f"        Ic_F2: {icf2_list[0]:.2f} A.")
+    print(f"        phi: {phi_list[0]:.2f}°")
+    print(f"        P_out: {p_out_list[0]:,.2f} W.")
+    print(f"        P_Cu: {p_cu_list[0]:,.2f} W.")
+
     print(f"c). Efficiency and voltage regulation for S_C = {S_C[1]:,} VA (fp={pf[1]}):")
     print(f"    - η: {efficiency_list[1]:.2f}%.")
     print(f"    - %ΔV: {regulation_list[1]:.2f}% (V_20 = {v20_list[1]:.2f} V).")
+    print("     Datos calculados:")
+    print(f"        Ic_F2: {icf2_list[1]:.2f} A.")
+    print(f"        phi: {phi_list[1]:.2f}°.")
+    print(f"        P_out: {p_out_list[1]:,.2f} W.")
+    print(f"        P_Cu: {p_cu_list[1]:,.2f} W.")
 
 
 if __name__ == "__main__":

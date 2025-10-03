@@ -19,11 +19,12 @@ def efficiency(
     power_factor_angle: float,
     equivalent_resistance_secondary: float,
     open_circuit_losses: float
-) -> float:
+) -> [float]:
     p_out = 3 * phase_voltage_secondary * phase_load_current_secondary * cos(radians(power_factor_angle))
     p_cu = 3 * phase_load_current_secondary ** 2 * equivalent_resistance_secondary
+    effic = (p_out / (p_out + p_cu + open_circuit_losses)) * 100
 
-    return (p_out / (p_out + p_cu + open_circuit_losses)) * 100
+    return effic, p_out, p_cu
 
 def open_circuit_voltage_secondary(
     phase_voltage_secondary: float,
