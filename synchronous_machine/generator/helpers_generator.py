@@ -2,22 +2,24 @@ import numpy as np
 import cmath
 
 
-def power_factor_sign(type_of_load: str, fp: float) -> float:
+def power_factor_sign(pf: float, type_of_load: str,) -> float:
     """Returns the sign (+ or -) based on the type of load."""
 
     if type_of_load == "lagging":
-        return fp * -1
+        return pf * -1
     if type_of_load == "leading":
-        return fp
+        return pf
 
 
-def power_factor_angle(fp: float) -> float:
+def power_factor_angle(pf: float, type_of_load: str) -> float:
     """Returns the power factor angle based on the power factor and its sign."""
 
-    if fp < 0:
-        return np.rad2deg(np.arccos(fp)) - 180
-    if fp >= 0:
-        return np.rad2deg(np.arccos(fp))
+    pf = power_factor_sign(pf, type_of_load)
+
+    if pf < 0:
+        return np.rad2deg(np.arccos(pf)) - 180
+    if pf >= 0:
+        return np.rad2deg(np.arccos(pf))
 
 
 def velocity(freq: int, poles: int) -> int:
@@ -98,7 +100,7 @@ def applied_torque(p_in: float, velocity: float):
     return p_in / velocity_rad
 
 
-def phase_voltage_if_no_ra(
+def voltage_at_terminals_if_no_ra(
     ea: float,
     ia: float,
     xs: float,
@@ -106,22 +108,23 @@ def phase_voltage_if_no_ra(
     load_type: str,
     connection: str
 ) -> float:
-    pf_angle_rad = np.deg2rad(pf_angle)
-    phase_voltage = []
 
-    xs_ia_cos_theta = xs * ia * np.cos(pf_angle_rad)
-    xs_ia_sin_theta = xs * ia * np.sin(pf_angle_rad)
+    pf_angle_rad = np.deg2rad(pf_angle)
+    xs_ia_cos_theta = xs * ia * np.cos(np.abs(pf_angle_rad))
+    xs_ia_sin_theta = xs * ia * np.sin(np.abs(pf_angle_rad))
+
+    phase_voltage = None
 
     if load_type == "lagging":  # inductive load
         v_phi_lagging = (np.sqrt(ea ** 2 - xs_ia_cos_theta ** 2)) - xs_ia_sin_theta
-        phase_voltage.append(v_phi_lagging)
+        phase_voltage = v_phi_lagging
 
-    if load_type == "leading":  # capacitive load
+    elif load_type == "leading":  # capacitive load
         v_phi_leading = (np.sqrt(ea ** 2 - xs_ia_cos_theta ** 2)) + xs_ia_sin_theta
-        phase_voltage.append(v_phi_leading)
+        phase_voltage = v_phi_leading
 
-    if connection == "start":
-        return phjase_v
+    if connection == "star":
+        return phase_voltage * np.sqrt(3)
 
-    if connection == "delta":
-        pass
+    elif connection == "delta":
+        return phase_voltage

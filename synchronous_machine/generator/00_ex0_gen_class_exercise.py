@@ -18,18 +18,18 @@ import helpers_generator as model
 def main() -> None:
     # Input data
     VOLTAGE:     float = 480  # Nominal voltage in V.
-    FREQ:        int = 60  # Frequency in Hz.
-    P:           int = 4  # Number of poles.
+    FREQ:          int = 60  # Frequency in Hz.
+    P:             int = 4  # Number of poles.
     XS:          float = 0.1  # Synchronous reactance in ohms.
     RA:          float = 0.015  # Armature resistance in ohms.
     FP:          float = 0.8  # Lagging power factor.
-    LOAD:        str = "lagging"
-    CONNECTION:  str = "delta"
+    LOAD:          str = "lagging"
+    CONNECTION:    str = "delta"
     I_LOAD:      float = 1200  # Load current in amps.
     P_MECH_MISC: float = 40000  # Mechanical and miscellaneous losses in W.
     P_CORE:      float = 30000  # Core losses in W.
 
-    pf_angle = model.power_factor_angle(model.power_factor_sign(LOAD, FP))
+    pf_angle = model.power_factor_angle(LOAD, FP)
     velocity = model.velocity(FREQ, P)
     i_a_rec, i_a_pol, v_phi = model.armature_current(CONNECTION, I_LOAD, VOLTAGE, pf_angle)
 
