@@ -1,6 +1,6 @@
 # Electric machines exercises
 
-Electric machine exercises. Some are from the book "Máquina Eléctricas Ed. 5, Chapman".
+Some are from the book "Máquina Eléctricas Ed. 5, Chapman J., Stephen".
 
 The topics are:
 
