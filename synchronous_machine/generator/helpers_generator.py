@@ -96,3 +96,32 @@ def induced_torque(p_conv: float, velocity: float) -> float:
 def applied_torque(p_in: float, velocity: float):
     velocity_rad = velocity * ((2 * np.pi) / 60)
     return p_in / velocity_rad
+
+
+def phase_voltage_if_no_ra(
+    ea: float,
+    ia: float,
+    xs: float,
+    pf_angle: float,
+    load_type: str,
+    connection: str
+) -> float:
+    pf_angle_rad = np.deg2rad(pf_angle)
+    phase_voltage = []
+
+    xs_ia_cos_theta = xs * ia * np.cos(pf_angle_rad)
+    xs_ia_sin_theta = xs * ia * np.sin(pf_angle_rad)
+
+    if load_type == "lagging":  # inductive load
+        v_phi_lagging = (np.sqrt(ea ** 2 - xs_ia_cos_theta ** 2)) - xs_ia_sin_theta
+        phase_voltage.append(v_phi_lagging)
+
+    if load_type == "leading":  # capacitive load
+        v_phi_leading = (np.sqrt(ea ** 2 - xs_ia_cos_theta ** 2)) + xs_ia_sin_theta
+        phase_voltage.append(v_phi_leading)
+
+    if connection == "start":
+        return phjase_v
+
+    if connection == "delta":
+        pass
