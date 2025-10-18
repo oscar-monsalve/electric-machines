@@ -1,6 +1,44 @@
 # Exercises
 
-Induction motor exercises "Chapman, Electric Machines, Ed. 5".
+### Exercise 1
+
+Se tiene un motor de inducción trifásico con conexión en estrella de 5 hp, 60 Hz, 1800 rpm y 440V con los
+siguientes parámetros:
+
+$r_1 = 1.5\\; \Omega,\\; r_2 = 1.2\\; \Omega$
+
+$jX = 6\\; \Omega\\; (total),\\; jX_m = 110\\; \Omega$
+
+$R_m = 900\\; \Omega$
+
+$s = 0.2$
+
+
+Calcular:
+
+a) Velocidad del rotor\
+b) corriente del motor\
+c) Potencia del rotor\
+d) Torque de salida\
+e) Eficiencia del motor\
+f) Calcular la eficiencia para un deslizamiento de $s=0.3$\
+g) Calcular la eficiencia para un deslizamiento de $s=0.1$
+
+<img src="images/motor_1.png" alt="Exercise 1-2" width="600" height="auto"/>
+
+Ecuaciones útiles:
+
+$n_r=(1-s)n_g$
+
+$I_r=V_F/Z$
+
+$P_{sal}=I_r^2R_2/s$
+
+$P=T\omega$
+
+$P_{en}=3V_FI_{en}\cos(\theta)$
+
+----
 
 ## 2. Velocity vs. torque (Chapman, pdf pág. 275):
 
