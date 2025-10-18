@@ -1,4 +1,4 @@
-# Exercise 1 (ex1)
+# Exercise 0
 
 A 480 V, 60 Hz, 4-pole, delta-connected, synchronous generator has a synchronous reactance of j0.1 Ω and an
 armature resistance of 0.015 Ω. Solve the following based on the given data:
