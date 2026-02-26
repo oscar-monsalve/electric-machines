@@ -1,3 +1,9 @@
+---
+id: plan
+aliases: []
+tags: []
+---
+
 # DC Machine OOP Model Plan
 
 ## Goal
@@ -26,6 +32,7 @@ DCMachine (abstract base class)
 - Base class calculates `E = k * phi * speed` generically
 
 ### 3. Core Attributes per Machine
+
 | Attribute | Symbol | Unit |
 |-----------|--------|------|
 | k | machine constant | V·s/rad or N·m/A |

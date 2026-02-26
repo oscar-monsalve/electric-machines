@@ -23,19 +23,43 @@ class DCMachine:
         self.machine_constant = machine_constant
 
 class SeparatelyExcited(DCMachine):
-    pass
+    def __init__() -> None:
+        pass
+
+    def field_current() -> float:
+        pass
 
 class ShuntMotorGenerator(DCMachine):
-    pass
+    def __init__() -> None:
+        pass
+
+    def field_current() -> float:
+        pass
 
 class SeriesMotorGenerator(DCMachine):
-    pass
+    def __init__() -> None:
+        pass
+
+    def field_current() -> float:
+        pass
 
 class CompoundMotorGenerator(DCMachine):
-    pass
+    def __init__() -> None:
+        pass
+
+    def field_current() -> float:
+        pass
 
 class CumulativeCompound(CompoundMotorGenerator):
-    pass
+    def __init__() -> None:
+        pass
+
+    def field_current() -> float:
+        pass
 
 class DifferentialCompound(CompoundMotorGenerator):
-    pass
+    def __init__() -> None:
+        pass
+
+    def field_current() -> float:
+        pass
