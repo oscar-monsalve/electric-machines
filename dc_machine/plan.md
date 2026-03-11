@@ -69,7 +69,3 @@ dc_machine/
 3. **shunt.py**: Field in parallel with armature
 4. **series.py**: Field in series with armature
 5. **compound.py**: Both series + shunt field (cumulative/differential)
-
----
-
-Would you like me to adjust any of these design decisions before finalizing the plan?
