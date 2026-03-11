@@ -78,7 +78,7 @@ def main() -> None:
 
     plt.plot(shaft_velocity_list, torque_list_r2, label=r"$R_2$ original")
     plt.plot(shaft_velocity_list, torque_list_doubled_r2, '-.', label=r"$R_2$ doble")
-    plt.plot(shaft_velocity_list, [torque_max]*solution_space, '--', label=fr"$\tau_{{máx}}={torque_max:.2f}$ Nm", color='red')
+    plt.plot(shaft_velocity_list, [torque_max]*solution_space, '--', label=fr"$\tau_{{max}}={torque_max:.2f}$ Nm", color='red')
     plt.xlabel(r"Velocidad angular $n_m$ (rpm)")
     plt.ylabel(r"Torque inducido $\tau_{ind}$ (Nm)")
     plt.title(r"Característica par-velocidad del motor")
