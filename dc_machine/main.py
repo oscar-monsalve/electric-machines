@@ -11,6 +11,9 @@ def main() -> None:
     my_machine_1: DCMachine = DCMachine(RA, RF, V, N, PHI, K)
     my_machine_2: DCMachine = DCMachine(2, RF, V, N, PHI, K)
 
+    my_machine_2.veloc
+
+
     print(f"Machine 1 -> Armature resistance: {my_machine_1.armature_resistance}")
     print(f"Machine 2 -> Armature resistance: {my_machine_2.armature_resistance}")
 
