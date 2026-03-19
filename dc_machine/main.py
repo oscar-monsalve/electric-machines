@@ -1,5 +1,6 @@
 from base import DCMachine
 
+
 def main() -> None:
     RA:  float = 0.2
     RF:  float = 0.2
@@ -11,8 +12,7 @@ def main() -> None:
     my_machine_1: DCMachine = DCMachine(RA, RF, V, N, PHI, K)
     my_machine_2: DCMachine = DCMachine(2, RF, V, N, PHI, K)
 
-    my_machine_2.veloc
-
+    my_machine_1.speed_regulation()
 
     print(f"Machine 1 -> Armature resistance: {my_machine_1.armature_resistance}")
     print(f"Machine 2 -> Armature resistance: {my_machine_2.armature_resistance}")

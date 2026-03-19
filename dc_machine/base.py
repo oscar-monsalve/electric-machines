@@ -24,7 +24,11 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
     ) -> None:
 
         if armature_resistance <= 0:
-            raise ValueError("Armature resistance must be positive")
+            raise ValueError("Armature resistance must be positive and non-zero.")
+        elif field_resistance <= 0:
+            raise ValueError("Field resistance must be positive and non-zero.")
+        elif machine_constant <= 0:
+            raise ValueError("The machine constant K must be positive and non-zero.")
 
         self.armature_resistance = armature_resistance
         self.field_resistance = field_resistance
@@ -34,7 +38,26 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
         self.machine_constant = machine_constant
 
     @abstractmethod
+    def armature_current(self) -> float:
+        pass
+
+    @abstractmethod
     def field_current(self) -> float:
+        pass
+
+    @abstractmethod
+    def voltage_at_terminals(self) -> float:
+        pass
+
+    @abstractmethod
+    def shaft_speed(
+        self,
+        voltage_at_terminals: float,
+        armature_resistance: float,
+        induced_torque: float,
+        machine_constant: float,
+        flux: float,
+    ) -> float:
         pass
 
     @staticmethod
@@ -53,6 +76,8 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
 
         if speed_full_load == 0:
             raise ValueError("Full-load speed cannot be zero.")
+        elif speed_no_load == 0:
+            raise ValueError("No-load speed cannot be zero.")
 
         return ((speed_no_load - speed_full_load) / speed_full_load) * 100
 
