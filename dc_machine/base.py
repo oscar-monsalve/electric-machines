@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
     '''
     Abstract base class for DC machines.
@@ -19,23 +20,21 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
         field_resistance: float,
         supply_voltage: float,
         speed: float,
-        flux: float,
-        machine_constant: float
     ) -> None:
 
         if armature_resistance <= 0:
             raise ValueError("Armature resistance must be positive and non-zero.")
         elif field_resistance <= 0:
             raise ValueError("Field resistance must be positive and non-zero.")
-        elif machine_constant <= 0:
-            raise ValueError("The machine constant K must be positive and non-zero.")
+        elif supply_voltage < 0:
+            raise ValueError("The supply voltage must be positive.")
+        elif speed < 0:
+            raise ValueError("The motor's speed must be positive.")
 
         self.armature_resistance = armature_resistance
         self.field_resistance = field_resistance
         self.supply_voltage = supply_voltage
         self.speed = speed
-        self.flux = flux
-        self.machine_constant = machine_constant
 
     @abstractmethod
     def armature_current(self) -> float:
@@ -50,14 +49,7 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
         pass
 
     @abstractmethod
-    def shaft_speed(
-        self,
-        voltage_at_terminals: float,
-        armature_resistance: float,
-        induced_torque: float,
-        machine_constant: float,
-        flux: float,
-    ) -> float:
+    def shaft_speed(self, voltage_at_terminals: float, armature_resistance: float, induced_torque: float) -> float:
         pass
 
     @staticmethod
@@ -80,28 +72,3 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
             raise ValueError("No-load speed cannot be zero.")
 
         return ((speed_no_load - speed_full_load) / speed_full_load) * 100
-
-
-class SeparatelyExcited(DCMachine):
-    def field_current(self) -> float:
-        pass
-
-class ShuntMotorGenerator(DCMachine):
-    def field_current(self) -> float:
-        pass
-
-class SeriesMotorGenerator(DCMachine):
-    def field_current(self) -> float:
-        pass
-
-class CompoundMotorGenerator(DCMachine):
-    def field_current(self) -> float:
-        pass
-
-class CumulativeCompound(CompoundMotorGenerator):
-    def field_current(self) -> float:
-        pass
-
-class DifferentialCompound(CompoundMotorGenerator):
-    def field_current(self) -> float:
-        pass
