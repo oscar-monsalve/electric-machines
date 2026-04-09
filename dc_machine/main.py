@@ -1,38 +1,89 @@
 from separately_excited import SeparatelyExcitedMotorGenerator
 from shunt import ShuntMotorGenerator
 from series import SeriesMotorGenerator
-from compound import CompoundMotorGenerator
+from compound import (CumulativeCompoundMotorGenerator,
+                      DifferentialCompoundMotorGenerator)
 
 # ---- Input description ----
-# OPERATION_MODE        -> Operation mode as "motor" or "generator". The user must specify one of the two.
-# ARMATURE_RESISTANCE   -> Armature resistance in ohms. Must be non-zero and a positive value (RA > 0).
-# FIELD_RESISTANCE      -> Field resistance in ohms. Must be non-zero and a positive value (RF > 0).
-# VOLTAGE               -> Nominal operation voltage in volts. Must be a positive value (VN ≥ 0).
-# SPEED                 -> Nominal rotational speed in rpm. Must be non-zero and a positive value (N > 0).
-# FLUX                  -> Magnetic flux magnitude in webber. Must be non-zero and a positive value (ϕ > 0).
-# K_CONSTANT            -> Constant. Must be non-zero and a positive value (K > 0).
+# ARMATURE_RESISTANCE -> Armature winding resistance in ohms. Must be non-zero and a positive value (RA > 0).
+# SHUNT_RESISTANCE    -> Shunt winding field resistance in ohms. Must be non-zero and a positive value (RFShunt > 0).
+# SERIES_RESISTANCE   -> Series winding field resistance in ohms. Must be non-zero and a positive value (RFSeries > 0).
+# VOLTAGE             -> Nominal operation voltage in volts. Must be a positive value (VN ≥ 0).
+# SPEED               -> Nominal rotational speed in rpm. Must be non-zero and a positive value (N > 0).
+# FLUX                -> Magnetic flux magnitude in webber. Must be non-zero and a positive value (ϕ > 0).
+# K_CONSTANT          -> Constant. Must be non-zero and a positive value (K > 0).
 
 def main() -> None:
-    OPERATION_MODE = "generator"
-    ARMATURE_RESISTANCE: float = 0.2
-    FIELD_RESISTANCE:    float = 0.2
-    VOLTAGE:             float = 110
-    SPEED:               float = 1800
-    FLUX:                float = 0.12
-    K_CONSTANT:          float = 1
+    # Machine nominal parameters
+    ARMATURE_RESISTANCE: float = 10.1
+    SHUNT_RESISTANCE:    float = 685.0
+    SERIES_RESISTANCE:   float = 5.9
+    VOLTAGE:             float = 220
+    SPEED:               float = 1500
+    FLUX:                float = 1.0
+    K_CONSTANT:          float = 1.0
 
-    shunt_machine: ShuntMotorGenerator = ShuntMotorGenerator(
+    # Instantiate machine objects
+    separately_excited_machine = SeparatelyExcitedMotorGenerator(
         ARMATURE_RESISTANCE,
-        FIELD_RESISTANCE,
+        SHUNT_RESISTANCE,
+        SERIES_RESISTANCE,
         VOLTAGE,
         SPEED,
         FLUX,
         K_CONSTANT,
-        operation_mode=OPERATION_MODE
+        operation_mode="generator"
     )
 
-    print("Shunt_machine:")
-    print(f"    Armature resistance: {shunt_machine.armature_resistance}")
+    series_machine = SeriesMotorGenerator(
+        ARMATURE_RESISTANCE,
+        SHUNT_RESISTANCE,
+        SERIES_RESISTANCE,
+        VOLTAGE,
+        SPEED,
+        FLUX,
+        K_CONSTANT,
+        operation_mode="generator"
+    )
+
+    shunt_machine = ShuntMotorGenerator(
+        ARMATURE_RESISTANCE,
+        SHUNT_RESISTANCE,
+        SERIES_RESISTANCE,
+        VOLTAGE,
+        SPEED,
+        FLUX,
+        K_CONSTANT,
+        operation_mode="generator"
+    )
+
+    cumulative_compound_machine = CumulativeCompoundMotorGenerator(
+        ARMATURE_RESISTANCE,
+        SHUNT_RESISTANCE,
+        SERIES_RESISTANCE,
+        VOLTAGE,
+        SPEED,
+        FLUX,
+        K_CONSTANT,
+        operation_mode="motor"
+    )
+
+    differential_compound_machine = DifferentialCompoundMotorGenerator(
+        ARMATURE_RESISTANCE,
+        SHUNT_RESISTANCE,
+        SERIES_RESISTANCE,
+        VOLTAGE,
+        SPEED,
+        FLUX,
+        K_CONSTANT,
+        operation_mode="motor"
+    )
+
+    print(separately_excited_machine)
+    print(shunt_machine)
+    print(series_machine)
+    print(cumulative_compound_machine)
+    print(differential_compound_machine)
 
 
 if __name__ == "__main__":
