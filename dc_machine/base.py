@@ -68,10 +68,13 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
 
         return "\n".join(lines)
 
-    def induced_emf(self) -> float:
-        """Calculates the induced electromotive force "emf".
+    def _current_sign(self) -> int:
+        """Returns +1 for motor mode (consumes power), -1 for generator mode (delivers power)."""
 
-        Returns the emf in volts using the equation: E = K * Φ * ω.
+        return 1 if self.operation_mode == "motor" else -1
+
+    def induced_emf(self) -> float:
+        """Calculates the induced electromotive force "emf" in volts using the equation: E = K * Φ * ω.
 
         Where:
             K: Machine constant (includes unit conversion factor).

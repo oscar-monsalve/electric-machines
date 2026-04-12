@@ -2,7 +2,7 @@ from base import DCMachine
 
 
 class SeriesMotorGenerator(DCMachine):
-    """Series: series field winding in series with armature. Field current equals armature current.
+    """Series: series field winding in series with armature.
 
     It is required to provide the series winding resistance.
 
