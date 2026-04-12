@@ -2,17 +2,24 @@ from base import DCMachine
 
 
 class SeriesMotorGenerator(DCMachine):
-    """Series DC machine: field winding in series with armature.
+    """Series: series field winding in series with armature. Field current equals armature current.
 
-    Characteristics: High starting torque, poor speed regulation.
-    Field current equals armature current.
+    It is required to provide the series winding resistance.
+
+    It is optional to provide the shunt winding resistance.
     """
+
+    def validate_resistance(self) -> None:
+        if self.series_resistance is None:
+            raise ValueError("Series machine requires series_resistance in ohms.")
+        elif self.series_resistance <= 0:
+            raise ValueError("Series resistance must be positive and non-zero.")
 
     def field_current(self, terminal_voltage: float) -> float:
         """If = Vt / (RArmature + RFSeries)"""
         ...
 
-    def armature_current(self, terminal_voltage: float, back_emf: float) -> float:
+    def armature_current(self, terminal_voltage: float, induced_emf: float) -> float:
         """Ia = (Vt - E) / Ra"""
         ...
 

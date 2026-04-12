@@ -2,11 +2,25 @@ from base import DCMachine
 
 
 class SeparatelyExcitedMotorGenerator(DCMachine):
-    def field_current(self, terminal_voltage: float) -> float:
-        """If = Vt / Rf"""
-        ...
+    """Separately excited: field current is externally controlled.
 
-    def armature_current(self, terminal_voltage: float, back_emf: float) -> float:
+    It is required to provide the shunt winding resistance.
+
+    It is optional to provide the series winding resistance.
+    """
+
+    def validate_resistance(self) -> None:
+        if self.shunt_resistance is None:
+            raise ValueError("Separately excited machine requires shunt_resistance in ohms.")
+        elif self.shunt_resistance <= 0:
+            raise ValueError("Shunt resistance must be positive and non-zero.")
+
+    def field_current(self, terminal_voltage: float) -> float:
+        """If = Vt / Rf (field resistance is separate, user-provided)."""
+
+        return terminal_voltage / self.shunt_resistance
+
+    def armature_current(self, terminal_voltage: float, induced_emf: float) -> float:
         """Ia = (Vt - E) / Ra"""
         ...
 

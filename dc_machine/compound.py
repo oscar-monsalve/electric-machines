@@ -2,13 +2,26 @@ from base import DCMachine
 
 
 class CompoundMotorGenerator(DCMachine):
-    """Compound configuration with both series and shunt field windings."""
+    """Compound: both series and shunt field windings.
+
+    It is required to provide both shunt and series winding resistances.
+    """
+
+    def validate_resistance(self) -> None:
+        if self.shunt_resistance is None:
+            raise ValueError("Compound machine requires shunt_resistance in ohms.")
+        elif self.shunt_resistance <= 0:
+            raise ValueError("Shunt resistance must be positive and non-zero.")
+        if self.series_resistance is None:
+            raise ValueError("Compound machine requires series_resistance in ohms.")
+        elif self.series_resistance <= 0:
+            raise ValueError("Series resistance must be positive and non-zero.")
 
     def field_current(self, terminal_voltage: float) -> float:
         """If = Vt / Rf"""
         ...
 
-    def armature_current(self, terminal_voltage: float, back_emf: float) -> float:
+    def armature_current(self, terminal_voltage: float, induced_emf: float) -> float:
         """Ia = (Vt - E) / Ra"""
         ...
 
@@ -29,9 +42,17 @@ class CompoundMotorGenerator(DCMachine):
         ...
 
 class CumulativeCompoundMotorGenerator(CompoundMotorGenerator):
-    """Cumulative: series and shunt fields aid each other."""
+    """
+    Cumulative: series and shunt fields aid each other.
+
+    It is required to provide both shunt and series winding resistances.
+    """
     ...
 
 class DifferentialCompoundMotorGenerator(CompoundMotorGenerator):
-    """Differential: series and shunt fields oppose each other."""
+    """
+    Differential: series and shunt fields oppose each other.
+
+    It is required to provide both shunt and series winding resistances.
+    """
     ...

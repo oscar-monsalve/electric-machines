@@ -13,21 +13,17 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
     def __init__(
         self,
         armature_resistance: float,
-        shunt_resistance: float,
-        series_resistance: float,
         supply_voltage: float,
         speed: float,
         flux: float,
         k_constant: float,
-        operation_mode: str
+        operation_mode: str,
+        shunt_resistance: float | None = None,
+        series_resistance: float | None = None,
     ) -> None:
 
         if armature_resistance <= 0:
             raise ValueError("Armature resistance must be positive and non-zero.")
-        elif shunt_resistance <= 0:
-            raise ValueError("Field resistance must be positive and non-zero.")
-        elif series_resistance <= 0:
-            raise ValueError("Series resistance must be positive and non-zero.")
         elif supply_voltage <= 0:
             raise ValueError("The supply voltage must be positive and non-zero.")
         elif speed <= 0:
@@ -40,33 +36,62 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
             raise ValueError(f"Must provide one of the operation modes: {self.VALID_MODES}")
 
         self.armature_resistance = armature_resistance
-        self.shunt_resistance = shunt_resistance
-        self.series_resistance = series_resistance
         self.supply_voltage = supply_voltage
         self.speed = speed
         self.flux = flux
         self.k_constant = k_constant
+        self.shunt_resistance = shunt_resistance
+        self.series_resistance = series_resistance
         self.operation_mode = operation_mode
+
+        self.validate_resistance()
 
     def __str__(self) -> str:
         class_name = type(self).__name__
         indent = "    "
         label_w = 25
-        return (
-            f"{class_name}:\n"
-            f"{indent}{'Armature resistance:':<{label_w}} {self.armature_resistance} Ω\n"
-            f"{indent}{'Shunt resistance:':<{label_w}} {self.shunt_resistance} Ω\n"
-            f"{indent}{'Series resistance:':<{label_w}} {self.series_resistance} Ω\n"
-            f"{indent}{'Supply voltage:':<{label_w}} {self.supply_voltage} V\n"
-            f"{indent}{'Speed:':<{label_w}} {self.speed} rpm\n"
-            f"{indent}{'Flux:':<{label_w}} {self.flux} Wb\n"
-            f"{indent}{'K constant:':<{label_w}} {self.k_constant}\n"
-            f"{indent}{'Operation mode:':<{label_w}} {self.operation_mode}\n"
-        )
 
-    def back_emf(self) -> float:
-        """E = K * Φ * ω"""
+        lines = [f"{class_name}:"]
+        lines.append(f"{indent}{'Armature resistance:':<{label_w}} {self.armature_resistance} Ω")
+
+        if self.shunt_resistance is not None:
+            lines.append(f"{indent}{'Shunt resistance:':<{label_w}} {self.shunt_resistance} Ω")
+
+        if self.series_resistance is not None:
+            lines.append(f"{indent}{'Series resistance:':<{label_w}} {self.series_resistance} Ω")
+
+        lines.append(f"{indent}{'Supply voltage:':<{label_w}} {self.supply_voltage} V")
+        lines.append(f"{indent}{'Speed:':<{label_w}} {self.speed} rpm")
+        lines.append(f"{indent}{'Flux:':<{label_w}} {self.flux} Wb")
+        lines.append(f"{indent}{'K constant:':<{label_w}} {self.k_constant}")
+        lines.append(f"{indent}{'Operation mode:':<{label_w}} {self.operation_mode}\n")
+
+        return "\n".join(lines)
+
+    def induced_emf(self) -> float:
+        """Calculates the induced electromotive force "emf".
+
+        Returns the emf in volts using the equation: E = K * Φ * ω.
+
+        Where:
+            K: Machine constant (includes unit conversion factor).
+            Φ: Magnetic flux per pole in webers (Wb).
+            ω: Angular speed in rpm (K is assumed to include the 60/(2π) conversion).
+
+        Note:
+            The constant K must be consistent with the speed unit used:
+            - If speed is in rpm, K must include the 60/(2π) factor.
+            - If speed is in rad/s, K is the pure machine constant (P·Z·N / 60·A).
+
+        Returns:
+            The induced emf in volts.
+        """
         return self.k_constant * self.flux * self.speed
+
+    @abstractmethod
+    def validate_resistance(self) -> None:
+        """Validates if the machine has the required resistances configured."""
+        ...
 
     @abstractmethod
     def field_current(self, terminal_voltage: float) -> float:
@@ -74,7 +99,7 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
         ...
 
     @abstractmethod
-    def armature_current(self, terminal_voltage: float, back_emf: float) -> float:
+    def armature_current(self, terminal_voltage: float, induced_emf: float) -> float:
         """Ia = (Vt - E) / Ra"""
         ...
 
