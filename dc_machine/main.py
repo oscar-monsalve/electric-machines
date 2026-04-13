@@ -6,28 +6,28 @@ from compound import (CumulativeCompoundMotorGenerator,
 
 # ---- Input description ----
 # ARMATURE_RESISTANCE -> Armature winding resistance in ohms. Must be non-zero and a positive value (RA > 0).
-# VOLTAGE             -> Nominal operation voltage in volts. Must be a positive value (VN ≥ 0).
-# SPEED               -> Nominal rotational speed in rpm. Must be non-zero and a positive value (N > 0).
-# FLUX                -> Magnetic flux magnitude in webber. Must be non-zero and a positive value (ϕ > 0).
-# K_CONSTANT          -> Constant. Must be non-zero and a positive value (K > 0).
 # SHUNT_RESISTANCE    -> Shunt winding field resistance in ohms. Must be non-zero and a positive value (RFShunt > 0).
 # SERIES_RESISTANCE   -> Series winding field resistance in ohms. Must be non-zero and a positive value (RFSeries > 0).
+# NOMINAL_VOLTAGE     -> Nominal operation voltage in volts. Must be a positive value (Vn ≥ 0).
+# SPEED_RPM           -> Nominal rotational speed in rpm. Must be non-zero and a positive value (N > 0).
+# FLUX                -> Magnetic flux magnitude in webber. Must be non-zero and a positive value (ϕ > 0).
+# K_CONSTANT          -> Constant. Must be non-zero and a positive value (K > 0).
 
 def main() -> None:
     # DC Machine nominal parameters
     ARMATURE_RESISTANCE: float = 10.1
     SHUNT_RESISTANCE:    float = 685.0
     SERIES_RESISTANCE:   float = 5.9
-    VOLTAGE:             float = 220
-    SPEED:               float = 1500
+    NOMINAL_VOLTAGE:     float = 220
+    SPEED_RPM:               float = 1500
     FLUX:                float = 1.0
     K_CONSTANT:          float = 1.0
 
     # Instantiate machine objects
     separately_excited_machine = SeparatelyExcitedMotorGenerator(
         armature_resistance=ARMATURE_RESISTANCE,
-        supply_voltage=VOLTAGE,
-        speed=SPEED,
+        nominal_voltage=NOMINAL_VOLTAGE,
+        speed_rpm=SPEED_RPM,
         flux=FLUX,
         k_constant=K_CONSTANT,
         operation_mode="generator",
@@ -36,8 +36,8 @@ def main() -> None:
 
     series_machine = SeriesMotorGenerator(
         armature_resistance=ARMATURE_RESISTANCE,
-        supply_voltage=VOLTAGE,
-        speed=SPEED,
+        nominal_voltage=NOMINAL_VOLTAGE,
+        speed_rpm=SPEED_RPM,
         flux=FLUX,
         k_constant=K_CONSTANT,
         operation_mode="generator",
@@ -46,8 +46,8 @@ def main() -> None:
 
     shunt_machine = ShuntMotorGenerator(
         armature_resistance=ARMATURE_RESISTANCE,
-        supply_voltage=VOLTAGE,
-        speed=SPEED,
+        nominal_voltage=NOMINAL_VOLTAGE,
+        speed_rpm=SPEED_RPM,
         flux=FLUX,
         k_constant=K_CONSTANT,
         operation_mode="generator",
@@ -56,8 +56,8 @@ def main() -> None:
 
     cumulative_compound_machine = CumulativeCompoundMotorGenerator(
         armature_resistance=ARMATURE_RESISTANCE,
-        supply_voltage=VOLTAGE,
-        speed=SPEED,
+        nominal_voltage=NOMINAL_VOLTAGE,
+        speed_rpm=SPEED_RPM,
         flux=FLUX,
         k_constant=K_CONSTANT,
         operation_mode="motor",
@@ -67,8 +67,8 @@ def main() -> None:
 
     differential_compound_machine = DifferentialCompoundMotorGenerator(
         armature_resistance=ARMATURE_RESISTANCE,
-        supply_voltage=VOLTAGE,
-        speed=SPEED,
+        nominal_voltage=NOMINAL_VOLTAGE,
+        speed_rpm=SPEED_RPM,
         flux=FLUX,
         k_constant=K_CONSTANT,
         operation_mode="motor",

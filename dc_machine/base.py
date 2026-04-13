@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
+class DCMachine(ABC):
     '''
     Abstract base class for DC machines.
 
@@ -13,36 +13,40 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
     def __init__(
         self,
         armature_resistance: float,
-        supply_voltage: float,
-        speed: float,
+        nominal_voltage: float,
+        speed_rpm: float,
         flux: float,
         k_constant: float,
         operation_mode: str,
         shunt_resistance: float | None = None,
         series_resistance: float | None = None,
+        brush_drop_voltage: float | None = None
     ) -> None:
 
         if armature_resistance <= 0:
-            raise ValueError("Armature resistance must be positive and non-zero.")
-        elif supply_voltage <= 0:
-            raise ValueError("The supply voltage must be positive and non-zero.")
-        elif speed <= 0:
-            raise ValueError("The machine's speed must be positive and non-zero.")
-        elif flux <= 0:
-            raise ValueError("The magnetic flux magnitude must be positive and non-zero.")
-        elif k_constant <= 0:
+            raise ValueError("Armature resistance, in ohms, must be positive and non-zero.")
+        if nominal_voltage <= 0:
+            raise ValueError("The supply voltage, in volts, must be positive and non-zero.")
+        if speed_rpm <= 0:
+            raise ValueError("The machine's speed, in rpm, must be positive and non-zero.")
+        if flux <= 0:
+            raise ValueError("The magnetic flux, in weber, magnitude must be positive and non-zero.")
+        if k_constant <= 0:
             raise ValueError("The machine's constant K must be positive and non-zero.")
-        elif operation_mode not in self.VALID_MODES:
+        if operation_mode not in self.VALID_MODES:
             raise ValueError(f"Must provide one of the operation modes: {self.VALID_MODES}")
+        if brush_drop_voltage is not None and brush_drop_voltage < 0:
+            raise ValueError("The brush drop voltage must be >= 0.")
 
         self.armature_resistance = armature_resistance
-        self.supply_voltage = supply_voltage
-        self.speed = speed
+        self.nominal_voltage = nominal_voltage
+        self.speed_rpm = speed_rpm
         self.flux = flux
         self.k_constant = k_constant
+        self.operation_mode = operation_mode
         self.shunt_resistance = shunt_resistance
         self.series_resistance = series_resistance
-        self.operation_mode = operation_mode
+        self.brush_drop_voltage = brush_drop_voltage
 
         self.validate_resistance()
 
@@ -60,9 +64,10 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
         if self.series_resistance is not None:
             lines.append(f"{indent}{'Series resistance:':<{label_w}} {self.series_resistance} Ω")
 
-        lines.append(f"{indent}{'Supply voltage:':<{label_w}} {self.supply_voltage} V")
-        lines.append(f"{indent}{'Speed:':<{label_w}} {self.speed} rpm")
+        lines.append(f"{indent}{'Supply voltage:':<{label_w}} {self.nominal_voltage} V")
+        lines.append(f"{indent}{'Speed:':<{label_w}} {self.speed_rpm} rpm")
         lines.append(f"{indent}{'Flux:':<{label_w}} {self.flux} Wb")
+        lines.append(f"{indent}{'Brush drop voltage:':<{label_w}} {self._brush_drop_value()} V")
         lines.append(f"{indent}{'K constant:':<{label_w}} {self.k_constant}")
         lines.append(f"{indent}{'Operation mode:':<{label_w}} {self.operation_mode}\n")
 
@@ -70,26 +75,28 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
 
     def _current_sign(self) -> int:
         """Returns +1 for motor mode (consumes power), -1 for generator mode (delivers power)."""
-
         return 1 if self.operation_mode == "motor" else -1
 
+    def _brush_drop_value(self) -> float:
+        """Returns brush drop voltage in volts, defaulting to 0.0 when disabled."""
+        return 0.0 if self.brush_drop_voltage is None else self.brush_drop_voltage
+
     def induced_emf(self) -> float:
-        """Calculates the induced electromotive force "emf" in volts using the equation: E = K * Φ * ω.
+        """Calculates induced emf E in volts.
 
-        Where:
-            K: Machine constant (includes unit conversion factor).
-            Φ: Magnetic flux per pole in webers (Wb).
-            ω: Angular speed in rpm (K is assumed to include the 60/(2π) conversion).
+        Current convention:
+            - speed_rpm is stored in rpm.
+            - K is defined so E = K * flux * speed_rpm.
 
-        Note:
-            The constant K must be consistent with the speed unit used:
-            - If speed is in rpm, K must include the 60/(2π) factor.
-            - If speed is in rad/s, K is the pure machine constant (P·Z·N / 60·A).
+        Important:
+        If you switch to SI form E = K_e * flux * omega_rad_s, update this method
+        and all K values consistently.
 
         Returns:
             The induced emf in volts.
         """
-        return self.k_constant * self.flux * self.speed
+
+        return self.k_constant * self.flux * self.speed_rpm
 
     @abstractmethod
     def validate_resistance(self) -> None:
@@ -97,30 +104,53 @@ class DCMachine(ABC):  # Inherit from the abc module (Abstract Base Classses)
         ...
 
     @abstractmethod
-    def field_current(self, terminal_voltage: float) -> float:
-        """If = Vt / Rf"""
+    def field_current(self, applied_field_voltage: float) -> float:
+        """Field current from applied field-winding voltage.
+        - Separately excited: applied_field_voltage = Vf.
+        - Shunt/Series/compound: applied_field_voltage = Vt (or branch voltage).
+        """
         ...
 
     @abstractmethod
     def armature_current(self, terminal_voltage: float, induced_emf: float) -> float:
-        """Ia = (Vt - E) / Ra"""
+        """Armature current with optional brush drop Vb.
+        Motor:     Ia = (Vt - E - Vb) / Ra
+        Generator: Ia = (E - Vt - Vb) / Ra
+        """
         ...
 
     @abstractmethod
-    def terminal_voltage(self, supply_voltage: float, armature_current: float) -> float:
-        """For motor: Vt = V - Ia*Ra | For generator: Vt = E - Ia*Ra"""
+    def terminal_voltage(self, armature_current: float) -> float:
+        """Terminal voltage with optional brush drop Vb.
+
+        Motor:     Vt = Vnom - Ia*Ra - Vb
+        Generator: Vt = E - Ia*Ra - Vb
+        """
         ...
 
     @abstractmethod
     def induced_torque(self, armature_current: float) -> float:
-        """T = K * Φ * Ia"""
+        """Electromagnetic (induced) torque in N·m.
+
+        Typical form used in this project:
+            T = (E * Ia) / omega
+
+        where:
+            E: induced emf in volts.
+            Ia: armature current in amps.
+            omega: mechanical angular speed in rad/s.
+
+        Note:
+            This depends on the E/K convention selected in each implementation.
+            Keep induced_torque() consistent with induced_emf().
+        """
         ...
 
     @abstractmethod
-    def shaft_speed(
-        self,
-        terminal_voltage: float,
-        armature_resistance: float,
-        induced_torque: float
-    ) -> float:
+    def shaft_speed_rpm(self, terminal_voltage: float, armature_current: float) -> float:
+        """Solve speed from electrical equation.
+        Motor:     E = Vt - Ia*Ra - Vb
+        Generator: E = Vt + Ia*Ra + Vb
+        with E = K * flux * n_rpm
+        """
         ...
