@@ -1,10 +1,11 @@
-# Electric machines exercises
+# Electric machines: mathematical model implementations
 
-Some are from the book "Máquina Eléctricas Ed. 5, Chapman J., Stephen".
+Some theoretical exercises are retrieved from the book "[Electric Machinery Fundamentals 5th Edition, Chapman J., Stephen](https://www.amazon.com/-/es/Machinery-Fundamentals-published-McGraw-Hill-Engineering/dp/B00E28TS0Y)".
 
-The topics are:
+Electric machine types:
 
-- Magnetic circuits.
-- Induction motor.
+- Direct current machine (DC machine).
+- Asynchronous machine (a.k.a induction machine).
+- Synchronous machine.
 - Transformer (single- and three-phase).
-- Synchronous machine (motor and generator).
+- Magnetic circuits.
