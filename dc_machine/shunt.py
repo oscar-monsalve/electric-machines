@@ -2,7 +2,7 @@ from base import DCMachine
 
 
 class ShuntMotorGenerator(DCMachine):
-    """Shunt: field winding in parallel with armature.
+    """Shunt wound: field winding in parallel with armature.
 
     It is required to provide the shunt winding resistance.
 
