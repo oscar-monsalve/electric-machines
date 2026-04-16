@@ -1,8 +1,8 @@
 from separately_excited import SeparatelyExcitedMotorGenerator
 from shunt import ShuntMotorGenerator
 from series import SeriesMotorGenerator
-from compound import (CumulativeCompoundMotorGenerator,
-                      DifferentialCompoundMotorGenerator)
+from compound import LongCompoundMotorGenerator, ShortCompoundMotorGenerator
+# from utils import power_to_watts
 
 # ---- Input description ----
 # ARMATURE_RESISTANCE -> Armature winding resistance in ohms. Must be non-zero and a positive value (RA > 0).
@@ -19,7 +19,7 @@ def main() -> None:
     SHUNT_RESISTANCE:    float = 685.0
     SERIES_RESISTANCE:   float = 5.9
     NOMINAL_VOLTAGE:     float = 220
-    SPEED_RPM:               float = 1500
+    SPEED_RPM:           float = 1500
     FLUX:                float = 1.0
     K_CONSTANT:          float = 1.0
 
@@ -54,7 +54,7 @@ def main() -> None:
         shunt_resistance=SHUNT_RESISTANCE,
     )
 
-    cumulative_compound_machine = CumulativeCompoundMotorGenerator(
+    long_compound_machine = LongCompoundMotorGenerator(
         armature_resistance=ARMATURE_RESISTANCE,
         nominal_voltage=NOMINAL_VOLTAGE,
         speed_rpm=SPEED_RPM,
@@ -65,7 +65,7 @@ def main() -> None:
         series_resistance=SERIES_RESISTANCE,
     )
 
-    differential_compound_machine = DifferentialCompoundMotorGenerator(
+    short_compound_machine = ShortCompoundMotorGenerator(
         armature_resistance=ARMATURE_RESISTANCE,
         nominal_voltage=NOMINAL_VOLTAGE,
         speed_rpm=SPEED_RPM,
@@ -79,8 +79,8 @@ def main() -> None:
     print(separately_excited_machine)
     print(shunt_machine)
     print(series_machine)
-    print(cumulative_compound_machine)
-    print(differential_compound_machine)
+    print(long_compound_machine)
+    print(short_compound_machine)
 
 
 if __name__ == "__main__":
