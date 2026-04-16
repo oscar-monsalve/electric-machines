@@ -2,7 +2,7 @@ from base import DCMachine
 
 
 class CompoundMotorGenerator(DCMachine):
-    """Compound: both series and shunt field windings.
+    """Compound wound: long-shunt or short-shunt connections.
 
     It is required to provide both shunt and series winding resistances.
     """
@@ -36,17 +36,23 @@ class CompoundMotorGenerator(DCMachine):
     def shaft_speed_rpm(self, terminal_voltage: float, armature_current: float) -> float:
         raise NotImplementedError("shaft_speed_rpm is not implemented yet for compound machine.")
 
-class CumulativeCompoundMotorGenerator(CompoundMotorGenerator):
+class LongCompoundMotorGenerator(CompoundMotorGenerator):
     """
-    Cumulative: series and shunt fields aid each other.
+    Long-shunt compound:
+    Two configurations are possible:
+        Cumulative: series and shunt fields aid each other.
+        Differential: series and shunt fields oppose each other.
 
     It is required to provide both shunt and series winding resistances.
     """
     ...
 
-class DifferentialCompoundMotorGenerator(CompoundMotorGenerator):
+class ShortCompoundMotorGenerator(CompoundMotorGenerator):
     """
-    Differential: series and shunt fields oppose each other.
+    Short-shunt compound:
+    Two configurations are possible:
+        Cumulative: series and shunt fields aid each other.
+        Differential: series and shunt fields oppose each other.
 
     It is required to provide both shunt and series winding resistances.
     """
