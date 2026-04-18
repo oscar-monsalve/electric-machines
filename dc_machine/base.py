@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from magnetization import MagnetizationCurve
 
 
 class DCMachine(ABC):
@@ -15,9 +16,10 @@ class DCMachine(ABC):
         armature_resistance: float,
         nominal_voltage: float,
         speed_rpm: float,
-        flux: float,
-        k_constant: float,
         operation_mode: str,
+        flux: float | None = None,
+        k_constant: float | None = None,
+        magnetization_curve: MagnetizationCurve = None,
         shunt_resistance: float | None = None,
         series_resistance: float | None = None,
         brush_drop_voltage: float | None = None
@@ -29,10 +31,6 @@ class DCMachine(ABC):
             raise ValueError("The supply voltage, in volts, must be positive and non-zero.")
         if speed_rpm <= 0:
             raise ValueError("The machine's speed, in rpm, must be positive and non-zero.")
-        if flux <= 0:
-            raise ValueError("The magnetic flux, in weber, magnitude must be positive and non-zero.")
-        if k_constant <= 0:
-            raise ValueError("The machine's constant K must be positive and non-zero.")
         if operation_mode not in self.VALID_MODES:
             raise ValueError(f"Must provide one of the operation modes: {self.VALID_MODES}")
         if brush_drop_voltage is not None and brush_drop_voltage < 0:
@@ -41,9 +39,10 @@ class DCMachine(ABC):
         self.armature_resistance = armature_resistance
         self.nominal_voltage = nominal_voltage
         self.speed_rpm = speed_rpm
+        self.operation_mode = operation_mode
         self.flux = flux
         self.k_constant = k_constant
-        self.operation_mode = operation_mode
+        self.magnetization_curve = magnetization_curve
         self.shunt_resistance = shunt_resistance
         self.series_resistance = series_resistance
         self.brush_drop_voltage = brush_drop_voltage
@@ -73,6 +72,25 @@ class DCMachine(ABC):
 
         return "\n".join(lines)
 
+    def has_analytic_model(self) -> bool:
+        return self.flux is not None and self.k_constant is not None
+
+    def has_magnetization_curve(self) -> bool:
+        return self.magnetization_curve is not None
+
+    def has_any_emf_model(self) -> bool:
+        return self.magnetization_curve() or self.has_analytic_model()
+
+    def _validate_analytic_model(self) -> None:
+        if self.flux is None:
+            raise ValueError("Flux must be provided when using the analytic EMF model.")
+        if self.k_constant is None:
+            raise ValueError("The machine's K constant must be provided when using the analytic EMF model.")
+        if self.flux <= 0:
+            raise ValueError("The magnetic flux, in weber, must be positive and non-zero.")
+        if self.k_constant <= 0:
+            raise ValueError("The machine's K constant must be positive and non-zero.")
+
     def _current_sign(self) -> int:
         """Returns +1 for motor mode (consumes power), -1 for generator mode (delivers power)."""
         return 1 if self.operation_mode == "motor" else -1
@@ -82,11 +100,14 @@ class DCMachine(ABC):
         return 0.0 if self.brush_drop_voltage is None else self.brush_drop_voltage
 
     def induced_emf(self) -> float:
-        """Calculates induced emf E in volts.
+        """Calculates induced emf E using the analytic model E = K * flux * speed_rpm.
+
+        This is the fallback model for machines that do not use a magnetization curve.
+        Subclasses may override or supplement this behavior.
 
         Current convention:
-            - speed_rpm is stored in rpm.
-            - K is defined so E = K * flux * speed_rpm.
+        - speed_rpm is stored in rpm.
+        - K is defined so E = K * flux * speed_rpm.
 
         Important:
         If you switch to SI form E = K_e * flux * omega_rad_s, update this method
@@ -95,7 +116,7 @@ class DCMachine(ABC):
         Returns:
             The induced emf in volts.
         """
-
+        self._validate_analytic_model()
         return self.k_constant * self.flux * self.speed_rpm
 
     @abstractmethod
