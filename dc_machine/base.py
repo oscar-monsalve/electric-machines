@@ -56,19 +56,20 @@ class DCMachine(ABC):
 
         lines = [f"{class_name}:"]
         lines.append(f"{indent}{'Armature resistance:':<{label_w}} {self.armature_resistance} Ω")
-
-        if self.shunt_resistance is not None:
-            lines.append(f"{indent}{'Shunt resistance:':<{label_w}} {self.shunt_resistance} Ω")
-
-        if self.series_resistance is not None:
-            lines.append(f"{indent}{'Series resistance:':<{label_w}} {self.series_resistance} Ω")
-
         lines.append(f"{indent}{'Supply voltage:':<{label_w}} {self.nominal_voltage} V")
         lines.append(f"{indent}{'Speed:':<{label_w}} {self.speed_rpm} rpm")
-        lines.append(f"{indent}{'Flux:':<{label_w}} {self.flux} Wb")
-        lines.append(f"{indent}{'Brush drop voltage:':<{label_w}} {self._brush_drop_value()} V")
-        lines.append(f"{indent}{'K constant:':<{label_w}} {self.k_constant}")
-        lines.append(f"{indent}{'Operation mode:':<{label_w}} {self.operation_mode}\n")
+        lines.append(f"{indent}{'Operation mode:':<{label_w}} {self.operation_mode}")
+        if self.flux is not None:
+            lines.append(f"{indent}{'Flux:':<{label_w}} {self.flux} Wb")
+        if self.k_constant is not None:
+            lines.append(f"{indent}{'K constant:':<{label_w}} {self.k_constant}")
+        if self.magnetization_curve is not None:
+            lines.append(f"{indent}{'Magnetization curve:':<{label_w}} available")
+        if self.shunt_resistance is not None:
+            lines.append(f"{indent}{'Shunt resistance:':<{label_w}} {self.shunt_resistance} Ω")
+        if self.series_resistance is not None:
+            lines.append(f"{indent}{'Series resistance:':<{label_w}} {self.series_resistance} Ω")
+        lines.append(f"{indent}{'Brush drop voltage:':<{label_w}} {self._brush_drop_value()} V\n")
 
         return "\n".join(lines)
 
