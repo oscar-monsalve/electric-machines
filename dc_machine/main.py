@@ -28,9 +28,9 @@ def main() -> None:
     # brush_drop_voltage: float | None = None
 
     # DC Machine nominal parameters
-    ARMATURE_RESISTANCE:              float = 10.1
-    NOMINAL_VOLTAGE:                  float = 220
-    SPEED_RPM:                        float = 1500
+    ARMATURE_RESISTANCE:                     float = 10.1
+    NOMINAL_VOLTAGE:                         float = 220
+    SPEED_RPM:                               float = 1500
     FLUX:                             float | None = None
     K_CONSTANT:                       float | None = None
     MAGNETIZATION_CURVE: MagnetizationCurve | None = MagnetizationCurve(
@@ -55,53 +55,53 @@ def main() -> None:
         brush_drop_voltage=BRUSH_DROP_VOLTAGE
     )
 
-    series_machine = SeriesMotorGenerator(
-        armature_resistance=ARMATURE_RESISTANCE,
-        nominal_voltage=NOMINAL_VOLTAGE,
-        speed_rpm=SPEED_RPM,
-        flux=FLUX,
-        k_constant=K_CONSTANT,
-        operation_mode="generator",
-        series_resistance=SERIES_RESISTANCE,
-    )
-
-    shunt_machine = ShuntMotorGenerator(
-        armature_resistance=ARMATURE_RESISTANCE,
-        nominal_voltage=NOMINAL_VOLTAGE,
-        speed_rpm=SPEED_RPM,
-        flux=FLUX,
-        k_constant=K_CONSTANT,
-        operation_mode="generator",
-        shunt_resistance=SHUNT_RESISTANCE,
-    )
-
-    long_compound_machine = LongCompoundMotorGenerator(
-        armature_resistance=ARMATURE_RESISTANCE,
-        nominal_voltage=NOMINAL_VOLTAGE,
-        speed_rpm=SPEED_RPM,
-        flux=FLUX,
-        k_constant=K_CONSTANT,
-        operation_mode="motor",
-        shunt_resistance=SHUNT_RESISTANCE,
-        series_resistance=SERIES_RESISTANCE,
-    )
-
-    short_compound_machine = ShortCompoundMotorGenerator(
-        armature_resistance=ARMATURE_RESISTANCE,
-        nominal_voltage=NOMINAL_VOLTAGE,
-        speed_rpm=SPEED_RPM,
-        flux=FLUX,
-        k_constant=K_CONSTANT,
-        operation_mode="motor",
-        shunt_resistance=SHUNT_RESISTANCE,
-        series_resistance=SERIES_RESISTANCE,
-    )
+    # series_machine = SeriesMotorGenerator(
+    #     armature_resistance=ARMATURE_RESISTANCE,
+    #     nominal_voltage=NOMINAL_VOLTAGE,
+    #     speed_rpm=SPEED_RPM,
+    #     flux=FLUX,
+    #     k_constant=K_CONSTANT,
+    #     operation_mode="generator",
+    #     series_resistance=SERIES_RESISTANCE,
+    # )
+    #
+    # shunt_machine = ShuntMotorGenerator(
+    #     armature_resistance=ARMATURE_RESISTANCE,
+    #     nominal_voltage=NOMINAL_VOLTAGE,
+    #     speed_rpm=SPEED_RPM,
+    #     flux=FLUX,
+    #     k_constant=K_CONSTANT,
+    #     operation_mode="generator",
+    #     shunt_resistance=SHUNT_RESISTANCE,
+    # )
+    #
+    # long_compound_machine = LongCompoundMotorGenerator(
+    #     armature_resistance=ARMATURE_RESISTANCE,
+    #     nominal_voltage=NOMINAL_VOLTAGE,
+    #     speed_rpm=SPEED_RPM,
+    #     flux=FLUX,
+    #     k_constant=K_CONSTANT,
+    #     operation_mode="motor",
+    #     shunt_resistance=SHUNT_RESISTANCE,
+    #     series_resistance=SERIES_RESISTANCE,
+    # )
+    #
+    # short_compound_machine = ShortCompoundMotorGenerator(
+    #     armature_resistance=ARMATURE_RESISTANCE,
+    #     nominal_voltage=NOMINAL_VOLTAGE,
+    #     speed_rpm=SPEED_RPM,
+    #     flux=FLUX,
+    #     k_constant=K_CONSTANT,
+    #     operation_mode="motor",
+    #     shunt_resistance=SHUNT_RESISTANCE,
+    #     series_resistance=SERIES_RESISTANCE,
+    # )
 
     print(separately_excited_machine)
-    print(shunt_machine)
-    print(series_machine)
-    print(long_compound_machine)
-    print(short_compound_machine)
+    # print(shunt_machine)
+    # print(series_machine)
+    # print(long_compound_machine)
+    # print(short_compound_machine)
 
 
 if __name__ == "__main__":

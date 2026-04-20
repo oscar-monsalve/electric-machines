@@ -19,7 +19,7 @@ class DCMachine(ABC):
         operation_mode: str,
         flux: float | None = None,
         k_constant: float | None = None,
-        magnetization_curve: MagnetizationCurve = None,
+        magnetization_curve: MagnetizationCurve | None = None,
         shunt_resistance: float | None = None,
         series_resistance: float | None = None,
         brush_drop_voltage: float | None = None
@@ -80,7 +80,7 @@ class DCMachine(ABC):
         return self.magnetization_curve is not None
 
     def has_any_emf_model(self) -> bool:
-        return self.magnetization_curve() or self.has_analytic_model()
+        return self.has_magnetization_curve() or self.has_analytic_model()
 
     def _validate_analytic_model(self) -> None:
         if self.flux is None:
@@ -173,6 +173,8 @@ class DCMachine(ABC):
         """Solve speed from electrical equation.
         Motor:     E = Vt - Ia*Ra - Vb
         Generator: E = Vt + Ia*Ra + Vb
-        with E = K * flux * n_rpm
+        with E = K * flux * n_rpm if analytical model is used.
+
+        TODO: explain how is it calculated using the magnetization curve model.
         """
         ...
