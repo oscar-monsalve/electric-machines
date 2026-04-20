@@ -1,5 +1,5 @@
 import pytest
-from magnetization import MagnetizationCurve
+from dc_machine.magnetization import MagnetizationCurve
 
 
 def make_curve() -> MagnetizationCurve:

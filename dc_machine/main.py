@@ -1,9 +1,9 @@
-from separately_excited import SeparatelyExcitedMotorGenerator
-from shunt import ShuntMotorGenerator
-from series import SeriesMotorGenerator
-from compound import LongCompoundMotorGenerator, ShortCompoundMotorGenerator
-from magnetization import MagnetizationCurve
-# from utils import power_to_watts
+from .separately_excited import SeparatelyExcitedMotorGenerator
+from .shunt import ShuntMotorGenerator
+from .series import SeriesMotorGenerator
+from .compound import LongCompoundMotorGenerator, ShortCompoundMotorGenerator
+from .magnetization import MagnetizationCurve
+# from .utils import power_to_watts
 
 # ---- Input description ----
 # ARMATURE_RESISTANCE -> Armature winding resistance in ohms. Must be non-zero and a positive value (RA > 0).

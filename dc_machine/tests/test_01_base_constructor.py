@@ -1,5 +1,5 @@
 import pytest
-from base import DCMachine
+from dc_machine.base import DCMachine
 
 
 # DCMachine is abstract, so it cannot be instantiated directly.

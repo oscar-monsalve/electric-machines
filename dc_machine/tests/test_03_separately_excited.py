@@ -1,8 +1,8 @@
 import pytest
 
-from magnetization import MagnetizationCurve
-from separately_excited import SeparatelyExcitedMotorGenerator
-from utils import rpm_to_rad_s
+from dc_machine.magnetization import MagnetizationCurve
+from dc_machine.separately_excited import SeparatelyExcitedMotorGenerator
+from dc_machine.utils import rpm_to_rad_s
 
 
 # ----------------------------

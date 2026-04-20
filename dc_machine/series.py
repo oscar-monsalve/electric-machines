@@ -1,4 +1,4 @@
-from base import DCMachine
+from .base import DCMachine
 
 
 class SeriesMotorGenerator(DCMachine):

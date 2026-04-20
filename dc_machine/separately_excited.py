@@ -1,6 +1,6 @@
-from base import DCMachine
-from magnetization import MagnetizationCurve
-from utils import rpm_to_rad_s
+from .base import DCMachine
+from .magnetization import MagnetizationCurve
+from .utils import rpm_to_rad_s
 
 
 class SeparatelyExcitedMotorGenerator(DCMachine):

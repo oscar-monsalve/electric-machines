@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from magnetization import MagnetizationCurve
+from .magnetization import MagnetizationCurve
 
 
 class DCMachine(ABC):
