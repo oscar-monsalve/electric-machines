@@ -160,6 +160,7 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         omega = rpm_to_rad_s(self.speed_rpm)
         if omega == 0:
             raise ValueError("speed_rpm cannot be zero when computing torque.")
+        # TODO: induced_torque must used the information from the magnetization curve or fall back to analytical model
         return (self.induced_emf() * armature_current) / omega
 
     def shaft_speed_rpm(self, terminal_voltage: float, armature_current: float) -> float:

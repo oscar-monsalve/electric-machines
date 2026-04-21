@@ -33,6 +33,7 @@ def main() -> None:
     NOMINAL_SPEED_RPM = 1500.0
     MAG_CURVE_RPM = 1000.0
 
+    # Helper function to generate the magnetization_curve object from the MagnetizationCurve class
     def make_magnetization_curve() -> MagnetizationCurve:
         return MagnetizationCurve(
             field_current_points=[0.0, 1.0, 2.0, 3.0],
@@ -52,10 +53,36 @@ def main() -> None:
     )
 
     # Part (a)
-    field_current = machine.field_current(applied_field_voltage=100.0)
-    assert field_current == 1.0
+    field_current_part_a = machine.field_current(applied_field_voltage=100.0)
+    emf_part_a = machine.induced_emf_from_field_voltage(applied_field_voltage=100.0)
+    assert field_current_part_a == 1.0
 
-    print(f"a). Field current: {field_current} A.")
+    # Part (b)
+    field_current_part_b = machine.field_current(applied_field_voltage=75.0)
+    field_voltage_part_b = machine.field_voltage_from_emf(emf=75.0)
+
+    # Part (c)
+    armature_current_part_c = machine.armature_current(terminal_voltage=60.0, induced_emf=emf_part_a)
+
+    # Part (d)
+    induced_torque_part_d = machine.induced_torque(armature_current=armature_current_part_c)
+
+    print("Solution for the following DC machine data:\n")
+    print(machine)
+
+    print("a) The field current and the internal generated emf when the external field supply is 100 V:")
+    print(f"    Field current: {field_current_part_a} A.")
+    print(f"    EMF: {emf_part_a} V.")
+
+    print("b). Field winding parameters to generatate 75 V:")
+    print(f"    Field current: {field_current_part_b} A.")
+    print(f"    Field voltage: {field_voltage_part_b} V.")
+
+    print("c) If the machine supplies a terminal voltage of 60 V under the excitation of part (a), find the armature current:")
+    print(f"    Armature current: {armature_current_part_c} A.")
+
+    print("d) For the operating condition in part (c), determine the induced torque:")
+    print(f"    Induced torque: {induced_torque_part_d} Nm.")
 
 
 if __name__ == "__main__":
