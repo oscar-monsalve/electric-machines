@@ -154,7 +154,7 @@ class DCMachine(ABC):
     def induced_torque(self, armature_current: float) -> float:
         """Electromagnetic (induced) torque in N·m.
 
-        Typical form used in this project:
+        Default contract for this project:
             T = (E * Ia) / omega
 
         where:
@@ -163,18 +163,25 @@ class DCMachine(ABC):
             omega: mechanical angular speed in rad/s.
 
         Note:
-            This depends on the E/K convention selected in each implementation.
-            Keep induced_torque() consistent with induced_emf().
+            This abstract method does not prescribe how E is obtained.
+            Subclasses may implement it using an analytic EMF model or expose
+            additional helper methods when extra excitation data is required.
         """
         ...
 
     @abstractmethod
     def shaft_speed_rpm(self, terminal_voltage: float, armature_current: float) -> float:
-        """Solve speed from electrical equation.
+        """Solve speed from the electrical equation.
+
         Motor:     E = Vt - Ia*Ra - Vb
         Generator: E = Vt + Ia*Ra + Vb
+
         with E = K * flux * n_rpm if analytical model is used.
 
-        TODO: explain how is it calculated using the magnetization curve model.
+        Note:
+            This base signature is sufficient only when the subclass can solve
+            speed directly from its configured machine model. Subclasses may
+            provide additional helper methods when excitation data is also
+            required, such as with magnetization-curve/OCC operation.
         """
         ...

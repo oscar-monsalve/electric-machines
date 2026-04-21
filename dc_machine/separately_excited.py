@@ -151,23 +151,52 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             return self.induced_emf() - (armature_current * self.armature_resistance) - vb
 
     def induced_torque(self, armature_current: float) -> float:
-        """T = (E * Ia) / ω
+        """Returns induced torque using the analytic EMF model only.
+
+        Uses:
+            T = (E * Ia) / omega
+
+        where E is obtained from the analytic fallback model:
+            E = K * flux * speed_rpm
+
+        This method is intentionally analytic-only. When the operating point is
+        defined by a magnetization curve / OCC, use:
+            - induced_torque_from_emf(...)
+            - induced_torque_from_field_voltage(...)
+
         Args:
-            armature_current: armature current (rotor current) in amps.
+            armature_current: armature current in amps.
+
         Returns:
-            The induced torque in Nm.
+            The induced torque in N·m.
         """
         omega = rpm_to_rad_s(self.speed_rpm)
         if omega == 0:
             raise ValueError("speed_rpm cannot be zero when computing torque.")
-        # TODO: induced_torque must used the information from the magnetization curve or fall back to analytical model
+
         return (self.induced_emf() * armature_current) / omega
 
     def shaft_speed_rpm(self, terminal_voltage: float, armature_current: float) -> float:
-        """Solve speed from electrical equation with optional brush drop.
-        Motor:     E = Vt - Ia*Ra - Vb
-        Generator: E = Vt + Ia*Ra + Vb
-        and E = K * flux * n_rpm
+        """Solves shaft speed using the analytic EMF model only.
+
+        Electrical equation:
+            Motor:     E = Vt - Ia*Ra - Vb
+            Generator: E = Vt + Ia*Ra + Vb
+
+        Analytic speed model:
+            E = K * flux * n_rpm
+
+        This method is intentionally analytic-only. When excitation is defined by
+        a magnetization curve / OCC, use:
+            - shaft_speed_rpm_from_field_voltage(...)
+            - shaft_speed_rpm_from_field_current(...)
+
+        Args:
+            terminal_voltage: terminal voltage in volts.
+            armature_current: armature current in amps.
+
+        Returns:
+            Shaft speed in rpm.
         """
         k_phi = self.k_constant * self.flux
         if k_phi == 0:
@@ -180,3 +209,33 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             emf = terminal_voltage + (armature_current * self.armature_resistance) + vb
 
         return emf / k_phi
+
+    def induced_torque_from_emf(self, armature_current: float, induced_emf: float) -> float:
+        """Returns induced torque from a known operating-point EMF.
+
+        Uses:
+            T = (E * Ia) / omega
+
+        Args:
+            armature_current: armature current in amps.
+            induced_emf: induced emf corresponding to the operating point, in volts.
+
+        Returns:
+            The induced torque in N·m.
+        """
+        omega = rpm_to_rad_s(self.speed_rpm)
+
+        if omega == 0:
+            raise ValueError("speed_rpm cannot be zero when computing torque.")
+
+        return (induced_emf * armature_current) / omega
+
+
+    def induced_torque_from_field_voltage():
+        ...
+
+    def shaft_speed_rpm_from_field_voltage():
+        ...
+
+    def shaft_speed_rpm_from_field_current():
+        ...
