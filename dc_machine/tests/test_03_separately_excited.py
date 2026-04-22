@@ -1,5 +1,4 @@
 import pytest
-
 from dc_machine.magnetization import MagnetizationCurve
 from dc_machine.separately_excited import SeparatelyExcitedMotorGenerator
 from dc_machine.utils import rpm_to_rad_s
@@ -177,3 +176,102 @@ def test_field_voltage_from_emf_raises_without_magnetization_curve():
     machine = make_machine_with_analytic_model()
     with pytest.raises(ValueError, match="requires a magnetization curve"):
         machine.field_voltage_from_emf(emf=50.0)
+
+def test_terminal_voltage_from_emf_generator_uses_operating_point_emf():
+    machine = make_machine_with_curve(mode="generator")
+    vt = machine.terminal_voltage_from_emf(
+        armature_current=10.0,
+        induced_emf=50.0,
+    )
+    assert vt == pytest.approx(30.0)
+
+def test_terminal_voltage_from_field_voltage_uses_magnetization_curve():
+    machine = make_machine_with_curve(mode="generator")
+    vt = machine.terminal_voltage_from_field_voltage(
+        armature_current=10.0,
+        applied_field_voltage=100.0,
+    )
+    assert vt == pytest.approx(30.0)
+
+def test_terminal_voltage_from_field_voltage_falls_back_to_analytic_model():
+    machine = make_machine_with_analytic_model(mode="generator")
+    vt = machine.terminal_voltage_from_field_voltage(
+        armature_current=10.0,
+        applied_field_voltage=100.0,
+    )
+    expected = machine.induced_emf() - (10.0 * machine.armature_resistance)
+    assert vt == pytest.approx(expected)
+
+def test_induced_torque_from_emf_uses_operating_point_emf():
+    machine = make_machine_with_curve()
+    ia = 10.0
+    induced_emf = 50.0
+    expected = (induced_emf * ia) / rpm_to_rad_s(machine.speed_rpm)
+
+    assert machine.induced_torque_from_emf(
+        armature_current=ia,
+        induced_emf=induced_emf,
+    ) == pytest.approx(expected)
+
+
+def test_induced_torque_from_field_voltage_falls_back_to_analytic_model():
+    machine = make_machine_with_analytic_model()
+    ia = 10.0
+    expected = (machine.induced_emf() * ia) / rpm_to_rad_s(machine.speed_rpm)
+
+    assert machine.induced_torque_from_field_voltage(
+        armature_current=ia,
+        applied_field_voltage=100.0,
+    ) == pytest.approx(expected)
+
+def test_induced_torque_from_field_voltage_uses_magnetization_curve():
+    machine = make_machine_with_curve()
+    ia = 10.0
+    expected_emf = 50.0
+    expected = (expected_emf * ia) / rpm_to_rad_s(machine.speed_rpm)
+
+    assert machine.induced_torque_from_field_voltage(
+        armature_current=ia,
+        applied_field_voltage=100.0,
+    ) == pytest.approx(expected)
+
+def test_shaft_speed_rpm_from_field_current_uses_magnetization_curve_generator():
+    machine = make_machine_with_curve(mode="generator")
+    # E = Vt + Ia*Ra + Vb = 60 + 10*2 + 0 = 80 V
+    speed = machine.shaft_speed_rpm_from_field_current(
+        terminal_voltage=60.0,
+        armature_current=10.0,
+        field_current=1.0,
+    )
+    # At If=1.0 A, reference EMF is 50 V at 1000 rpm, so speed = 80 * 1000 / 50 = 1600 rpm
+    assert speed == pytest.approx(1600.0)
+
+def test_shaft_speed_rpm_from_field_current_raises_without_magnetization_curve():
+    machine = make_machine_with_analytic_model()
+    with pytest.raises(ValueError, match="requires a magnetization curve"):
+        machine.shaft_speed_rpm_from_field_current(
+            terminal_voltage=60.0,
+            armature_current=10.0,
+            field_current=1.0,
+        )
+
+def test_shaft_speed_rpm_from_field_voltage_uses_magnetization_curve_generator():
+    machine = make_machine_with_curve(mode="generator")
+
+    speed = machine.shaft_speed_rpm_from_field_voltage(
+        terminal_voltage=60.0,
+        armature_current=10.0,
+        applied_field_voltage=100.0,
+    )
+
+    assert speed == pytest.approx(1600.0)
+
+def test_shaft_speed_rpm_from_field_voltage_raises_without_magnetization_curve():
+    machine = make_machine_with_analytic_model()
+
+    with pytest.raises(ValueError, match="requires a magnetization curve"):
+        machine.shaft_speed_rpm_from_field_voltage(
+            terminal_voltage=60.0,
+            armature_current=10.0,
+            applied_field_voltage=100.0,
+        )
