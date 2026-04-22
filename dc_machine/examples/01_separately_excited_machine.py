@@ -1,6 +1,5 @@
 from dc_machine.separately_excited import SeparatelyExcitedMotorGenerator
 from dc_machine.magnetization import MagnetizationCurve
-# from utils import rpm_to_rad_s
 
 
 def main() -> None:
@@ -58,31 +57,38 @@ def main() -> None:
     assert field_current_part_a == 1.0
 
     # Part (b)
-    field_current_part_b = machine.field_current(applied_field_voltage=75.0)
+    field_current_part_b = machine.magnetization_curve.field_current_from_emf(
+        emf=75.0,
+        desired_speed_rpm=NOMINAL_SPEED_RPM
+    )
     field_voltage_part_b = machine.field_voltage_from_emf(emf=75.0)
 
     # Part (c)
     armature_current_part_c = machine.armature_current(terminal_voltage=60.0, induced_emf=emf_part_a)
 
     # Part (d)
-    induced_torque_part_d = machine.induced_torque(armature_current=armature_current_part_c)
+    induced_torque_part_d = machine.induced_torque_from_emf(
+        armature_current=armature_current_part_c,
+        induced_emf=emf_part_a
+    )
 
+    # Print solutions
     print("Solution for the following DC machine data:\n")
     print(machine)
 
     print("a) The field current and the internal generated emf when the external field supply is 100 V:")
-    print(f"    Field current: {field_current_part_a} A.")
-    print(f"    EMF: {emf_part_a} V.")
+    print(f"    Field current: {field_current_part_a:.2f} A.")
+    print(f"    EMF: {emf_part_a:.2f} V.")
 
-    print("b). Field winding parameters to generatate 75 V:")
-    print(f"    Field current: {field_current_part_b} A.")
-    print(f"    Field voltage: {field_voltage_part_b} V.")
+    print("b). Field winding parameters to generatate 75 V internally at 1500 rpm:")
+    print(f"    Field current: {field_current_part_b:.2f} A.")
+    print(f"    Field voltage: {field_voltage_part_b:.2f} V.")
 
     print("c) If the machine supplies a terminal voltage of 60 V under the excitation of part (a), find the armature current:")
-    print(f"    Armature current: {armature_current_part_c} A.")
+    print(f"    Armature current: {armature_current_part_c:.2f} A.")
 
     print("d) For the operating condition in part (c), determine the induced torque:")
-    print(f"    Induced torque: {induced_torque_part_d} Nm.")
+    print(f"    Induced torque: {induced_torque_part_d:.2f} Nm.")
 
 
 if __name__ == "__main__":
