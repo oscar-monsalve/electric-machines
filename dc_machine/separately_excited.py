@@ -129,26 +129,81 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         Returns:
             The armature current in amps depending the machine operating mode (motor or generator).
         """
-        vb = self._brush_drop_value()
-        return (self._current_sign() * (terminal_voltage - induced_emf) - vb) / self.armature_resistance
+        brush_drop_voltage = self._brush_drop_value()
+        return (self._current_sign() * (terminal_voltage - induced_emf) - brush_drop_voltage) / self.armature_resistance
 
     def terminal_voltage(self, armature_current: float) -> float:
-        """Terminal voltage with optional brush voltage drop.
+        """Returns terminal voltage using the analytic EMF model only.
+
+        Electrical equation:
             Motor:     Vt = Vnom - Ia*Ra - Vb
             Generator: Vt = E - Ia*Ra - Vb
 
+        For generator operation, E is obtained from the analytic model:
+            E = K * flux * speed_rpm
+
+        This method is intentionally analytic-only. When the operating point is
+        defined by a magnetization curve / OCC, use:
+            - terminal_voltage_from_emf(...)
+            - terminal_voltage_from_field_voltage(...)
+
         Args:
-            armature_current: armature current (rotor current) in amps.
+            armature_current: armature current in amps.
 
         Returns:
-            The voltage at terminals in volts.
+            Terminal voltage in volts.
         """
-        vb = self._brush_drop_value()
+        brush_drop_voltage = self._brush_drop_value()
 
         if self.operation_mode == "motor":
-            return self.nominal_voltage - (armature_current * self.armature_resistance) - vb
+            return self.nominal_voltage - (armature_current * self.armature_resistance) - brush_drop_voltage
         else:  # generator
-            return self.induced_emf() - (armature_current * self.armature_resistance) - vb
+            return self.induced_emf() - (armature_current * self.armature_resistance) - brush_drop_voltage
+
+    def terminal_voltage_from_emf(self, armature_current: float, induced_emf: float) -> float:
+        """Returns terminal voltage from a known operating-point EMF.
+
+        Electrical equation:
+            Motor:     Vt = E + Ia*Ra + Vb
+            Generator: Vt = E - Ia*Ra - Vb
+
+        Args:
+            armature_current: armature current in amps.
+            induced_emf: induced emf corresponding to the operating point, in volts.
+
+        Returns:
+            Terminal voltage in volts.
+        """
+        brush_drop_voltage = self._brush_drop_value()
+
+        if self.operation_mode == "motor":
+            return induced_emf + (armature_current * self.armature_resistance) + brush_drop_voltage
+        else:  # generator
+            return induced_emf - (armature_current * self.armature_resistance) - brush_drop_voltage
+
+    def terminal_voltage_from_field_voltage(
+        self,
+        armature_current: float,
+        applied_field_voltage: float
+    ) -> float:
+        """Returns terminal voltage using the preferred excitation model.
+
+        Preferred order:
+        1. magnetization curve, if available.
+        2. analytic model E = K * flux * speed_rpm (fallback).
+
+        Args:
+            armature_current: armature current in amps.
+            applied_field_voltage: external DC voltage applied to the field winding.
+
+        Returns:
+            Terminal voltage in volts.
+        """
+        induced_emf = self.induced_emf_from_field_voltage(applied_field_voltage)
+        return self.terminal_voltage_from_emf(
+            armature_current=armature_current,
+            induced_emf=induced_emf
+        )
 
     def induced_torque(self, armature_current: float) -> float:
         """Returns induced torque using the analytic EMF model only.
@@ -202,11 +257,11 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         if k_phi == 0:
             raise ValueError("k_constant * flux must be non-zero.")
 
-        vb = self._brush_drop_value()
+        brush_drop_voltage = self._brush_drop_value()
         if self.operation_mode == "motor":
-            emf = terminal_voltage - (armature_current * self.armature_resistance) - vb
+            emf = terminal_voltage - (armature_current * self.armature_resistance) - brush_drop_voltage
         else:
-            emf = terminal_voltage + (armature_current * self.armature_resistance) + vb
+            emf = terminal_voltage + (armature_current * self.armature_resistance) + brush_drop_voltage
 
         return emf / k_phi
 
@@ -230,12 +285,105 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         return (induced_emf * armature_current) / omega
 
+    def induced_torque_from_field_voltage(self, armature_current: float, applied_field_voltage: float) -> float:
+        """Returns induced torque using the preferred excitation model.
 
-    def induced_torque_from_field_voltage():
-        ...
+        Preferred order:
+        1. magnetization curve, if available.
+        2. analytic model E = K * flux * speed_rpm (fallback).
 
-    def shaft_speed_rpm_from_field_voltage():
-        ...
+        Args:
+            armature_current: armature current in amps.
+            applied_field_voltage: external DC voltage applied to the field winding.
 
-    def shaft_speed_rpm_from_field_current():
-        ...
+        Returns:
+            The induced torque in N·m.
+        """
+        induced_emf = self.induced_emf_from_field_voltage(applied_field_voltage)
+        return self.induced_torque_from_emf(
+            armature_current=armature_current,
+            induced_emf=induced_emf
+        )
+
+    def shaft_speed_rpm_from_field_current(
+        self,
+        terminal_voltage: float,
+        armature_current: float,
+        field_current: float
+    ) -> float:
+        """Solves shaft speed from terminal conditions and field current.
+        Electrical equation:
+            Motor:     E = Vt - Ia*Ra - Vb
+            Generator: E = Vt + Ia*Ra + Vb
+
+        For a fixed field current, the magnetization curve gives the induced emf at
+        the reference speed. Since E is proportional to speed for the same field
+        current, the shaft speed is:
+
+            n = E_required * n_ref / E_ref
+
+        where:
+            E_required: emf required by the terminal operating point.
+            E_ref: emf from the OCC at the same field current and reference speed.
+            n_ref: reference speed of the OCC data.
+
+        Args:
+            terminal_voltage: terminal voltage in volts.
+            armature_current: armature current in amps.
+            field_current: field current in amps.
+
+        Returns:
+            Shaft speed in rpm.
+
+        Raises:
+            ValueError: if no magnetization curve is available.
+            ValueError: if the OCC gives zero reference emf for the given field current.
+        """
+        if not self.has_magnetization_curve():
+            raise ValueError("shaft_speed_rpm_from_field_current requires a magnetization curve.")
+
+        brush_drop_voltage = self._brush_drop_value()
+        if self.operation_mode == "motor":
+            required_emf = terminal_voltage - (armature_current * self.armature_resistance) - brush_drop_voltage
+        else:
+            required_emf = terminal_voltage + (armature_current * self.armature_resistance) + brush_drop_voltage
+
+        reference_speed_rpm = self.magnetization_curve.reference_speed_rpm
+        emf_at_reference_speed = self.magnetization_curve.emf_from_field_current(
+            field_current=field_current,
+            desired_speed_rpm=reference_speed_rpm
+        )
+
+        if emf_at_reference_speed == 0:
+            raise ValueError(
+                "Cannot solve speed: OCC gives zero emf at the reference speed for the given field current."
+            )
+
+        return required_emf * (reference_speed_rpm / emf_at_reference_speed)
+
+    def shaft_speed_rpm_from_field_voltage(
+        self,
+        terminal_voltage: float,
+        armature_current: float,
+        applied_field_voltage: float,
+    ) -> float:
+        """Solves shaft speed from terminal conditions and applied field voltage.
+
+        This helper is intended for separately excited OCC operation, where the
+        field voltage determines field current through:
+            If = Vf / Rf
+
+        Args:
+            terminal_voltage: terminal voltage in volts.
+            armature_current: armature current in amps.
+            applied_field_voltage: external DC voltage applied to the field winding.
+
+        Returns:
+            Shaft speed in rpm.
+        """
+        field_current = self.field_current(applied_field_voltage)
+        return self.shaft_speed_rpm_from_field_current(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current,
+            field_current=field_current,
+        )
