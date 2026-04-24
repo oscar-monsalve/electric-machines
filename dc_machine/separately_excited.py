@@ -33,7 +33,8 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         magnetization_curve: MagnetizationCurve | None = None,
         shunt_resistance: float | None = None,
         series_resistance: float | None = None,
-        brush_drop_voltage: float | None = None
+        compensating_resistance: float | None = None,
+        brush_drop_voltage: float | None = None,
     ) -> None:
         super().__init__(
             armature_resistance=armature_resistance,
@@ -45,7 +46,8 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             magnetization_curve=magnetization_curve,
             shunt_resistance=shunt_resistance,
             series_resistance=series_resistance,
-            brush_drop_voltage=brush_drop_voltage
+            compensating_resistance=compensating_resistance,
+            brush_drop_voltage=brush_drop_voltage,
         )
 
     def validate_resistance(self) -> None:
@@ -119,18 +121,24 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
     def armature_current(self, terminal_voltage: float, induced_emf: float) -> float:
         """Calculates the armature current with optional brush voltage drop (Vb).
-             Motor:     Ia = (Vt - E - Vb) / Ra
-             Generator: Ia = (E - Vt - Vb) / Ra
+
+          Motor:     Ia = (Vt - E - Vb) / Ra
+          Generator: Ia = (E - Vt - Vb) / Ra
 
         Args:
             terminal_voltage: output voltage (generator) or input voltage (motor) at terminals in volts.
-            induced_emf: emf (motor) or back-emf (generator) in volts.
+            induced_emf: emf (generator) or back-emf (motor) in volts.
 
         Returns:
             The armature current in amps depending the machine operating mode (motor or generator).
+
+        Note:
+            In implementation, the armature-path resistance is ``Ra + Ri`` when a
+            compensating resistance is configured.
         """
+        armature_path_resistance = self._armature_path_resistance()
         brush_drop_voltage = self._brush_drop_value()
-        return (self._current_sign() * (terminal_voltage - induced_emf) - brush_drop_voltage) / self.armature_resistance
+        return (self._current_sign() * (terminal_voltage - induced_emf) - brush_drop_voltage) / armature_path_resistance
 
     def terminal_voltage(self, armature_current: float) -> float:
         """Returns terminal voltage using the analytic EMF model only.
@@ -152,13 +160,18 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             Terminal voltage in volts.
+
+        Note:
+            In implementation, the armature-path resistance is ``Ra + Ri`` when a
+            compensating resistance is configured.
         """
+        armature_path_resistance = self._armature_path_resistance()
         brush_drop_voltage = self._brush_drop_value()
 
         if self.operation_mode == "motor":
-            return self.nominal_voltage - (armature_current * self.armature_resistance) - brush_drop_voltage
+            return self.nominal_voltage - (armature_current * armature_path_resistance) - brush_drop_voltage
         else:  # generator
-            return self.induced_emf() - (armature_current * self.armature_resistance) - brush_drop_voltage
+            return self.induced_emf() - (armature_current * armature_path_resistance) - brush_drop_voltage
 
     def terminal_voltage_from_emf(self, armature_current: float, induced_emf: float) -> float:
         """Returns terminal voltage from a known operating-point EMF.
@@ -173,13 +186,18 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             Terminal voltage in volts.
+
+        Note:
+            In implementation, the armature-path resistance is ``Ra + Ri`` when a
+            compensating resistance is configured.
         """
+        armature_path_resistance = self._armature_path_resistance()
         brush_drop_voltage = self._brush_drop_value()
 
         if self.operation_mode == "motor":
-            return induced_emf + (armature_current * self.armature_resistance) + brush_drop_voltage
+            return induced_emf + (armature_current * armature_path_resistance) + brush_drop_voltage
         else:  # generator
-            return induced_emf - (armature_current * self.armature_resistance) - brush_drop_voltage
+            return induced_emf - (armature_current * armature_path_resistance) - brush_drop_voltage
 
     def terminal_voltage_from_field_voltage(
         self,
@@ -252,16 +270,21 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             Shaft speed in rpm.
+
+        Note:
+            In implementation, the armature-path resistance is ``Ra + Ri`` when a
+            compensating resistance is configured.
         """
         k_phi = self.k_constant * self.flux
         if k_phi == 0:
             raise ValueError("k_constant * flux must be non-zero.")
 
+        armature_path_resistance = self._armature_path_resistance()
         brush_drop_voltage = self._brush_drop_value()
         if self.operation_mode == "motor":
-            emf = terminal_voltage - (armature_current * self.armature_resistance) - brush_drop_voltage
+            emf = terminal_voltage - (armature_current * armature_path_resistance) - brush_drop_voltage
         else:
-            emf = terminal_voltage + (armature_current * self.armature_resistance) + brush_drop_voltage
+            emf = terminal_voltage + (armature_current * armature_path_resistance) + brush_drop_voltage
 
         return emf / k_phi
 
@@ -338,15 +361,20 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         Raises:
             ValueError: if no magnetization curve is available.
             ValueError: if the OCC gives zero reference emf for the given field current.
+
+        Note:
+            In implementation, the armature-path resistance is ``Ra + Ri`` when a
+            compensating resistance is configured.
         """
         if not self.has_magnetization_curve():
             raise ValueError("shaft_speed_rpm_from_field_current requires a magnetization curve.")
 
+        armature_path_resistance = self._armature_path_resistance()
         brush_drop_voltage = self._brush_drop_value()
         if self.operation_mode == "motor":
-            required_emf = terminal_voltage - (armature_current * self.armature_resistance) - brush_drop_voltage
+            required_emf = terminal_voltage - (armature_current * armature_path_resistance) - brush_drop_voltage
         else:
-            required_emf = terminal_voltage + (armature_current * self.armature_resistance) + brush_drop_voltage
+            required_emf = terminal_voltage + (armature_current * armature_path_resistance) + brush_drop_voltage
 
         reference_speed_rpm = self.magnetization_curve.reference_speed_rpm
         emf_at_reference_speed = self.magnetization_curve.emf_from_field_current(

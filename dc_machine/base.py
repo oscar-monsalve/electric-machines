@@ -23,7 +23,8 @@ class DCMachine(ABC):
         magnetization_curve: MagnetizationCurve | None = None,
         shunt_resistance: float | None = None,
         series_resistance: float | None = None,
-        brush_drop_voltage: float | None = None
+        compensating_resistance: float | None = None,
+        brush_drop_voltage: float | None = None,
     ) -> None:
 
         if armature_resistance <= 0:
@@ -34,6 +35,8 @@ class DCMachine(ABC):
             raise ValueError("The machine's speed, in rpm, must be positive and non-zero.")
         if operation_mode not in self.VALID_MODES:
             raise ValueError(f"Must provide one of the operation modes: {self.VALID_MODES}")
+        if compensating_resistance is not None and compensating_resistance <= 0:
+            raise ValueError("The compensating resistance, in ohms, must be positive and non-zero.")
         if brush_drop_voltage is not None and brush_drop_voltage < 0:
             raise ValueError("The brush drop voltage must be >= 0.")
 
@@ -46,6 +49,7 @@ class DCMachine(ABC):
         self.magnetization_curve = magnetization_curve
         self.shunt_resistance = shunt_resistance
         self.series_resistance = series_resistance
+        self.compensating_resistance = compensating_resistance
         self.brush_drop_voltage = brush_drop_voltage
 
         self.validate_resistance()
@@ -76,30 +80,29 @@ class DCMachine(ABC):
             lines.append(f"{indent}{'Shunt resistance:':<{label_w}} {self.shunt_resistance} Ω")
         if self.series_resistance is not None:
             lines.append(f"{indent}{'Series resistance:':<{label_w}} {self.series_resistance} Ω")
+        if self.compensating_resistance is not None:
+            lines.append(f"{indent}{'Compensating resistance:':<{label_w}} {self.compensating_resistance} Ω")
         lines.append(f"{indent}{'Brush drop voltage:':<{label_w}} {self._brush_drop_value()} V\n")
 
         return "\n".join(lines)
 
-    def has_analytic_model(self) -> bool:
-        """Returns whether the analytic EMF model is fully configured.
+    def _armature_path_resistance(self) -> float:
+        """Returns the equivalent resistance seen by the armature current.
 
-        The analytic model requires both ``flux`` and ``k_constant`` to be
-        present. This helper only checks presence; positivity is validated when
-        the analytic model is actually used.
+        This is the total resistance in the armature current path. If a compensating
+        or auxiliary winding is modeled, its resistance is added in series with the
+        armature resistance:
+
+            R_a_path = R_a + R_i
+
+        where:
+            R_a: armature resistance
+            R_i: compensating resistance, when present
         """
-        return self.flux is not None and self.k_constant is not None
-
-    def has_magnetization_curve(self) -> bool:
-        """Returns whether a magnetization-curve / OCC model is available."""
-        return self.magnetization_curve is not None
-
-    def has_any_emf_model(self) -> bool:
-        """Returns whether any EMF model is available for the machine.
-
-        A machine is considered able to produce EMF calculations if it has
-        either a magnetization curve or a fully specified analytic model.
-        """
-        return self.has_magnetization_curve() or self.has_analytic_model()
+        if self.compensating_resistance is not None:
+            return self.armature_resistance + self.compensating_resistance
+        else:
+            return self.armature_resistance
 
     def _validate_analytic_model(self) -> None:
         """Validates the analytic EMF model inputs.
@@ -132,6 +135,27 @@ class DCMachine(ABC):
         If brush drop is not configured, returns ``0.0``.
         """
         return 0.0 if self.brush_drop_voltage is None else self.brush_drop_voltage
+
+    def has_analytic_model(self) -> bool:
+        """Returns whether the analytic EMF model is fully configured.
+
+        The analytic model requires both ``flux`` and ``k_constant`` to be
+        present. This helper only checks presence; positivity is validated when
+        the analytic model is actually used.
+        """
+        return self.flux is not None and self.k_constant is not None
+
+    def has_magnetization_curve(self) -> bool:
+        """Returns whether a magnetization-curve / OCC model is available."""
+        return self.magnetization_curve is not None
+
+    def has_any_emf_model(self) -> bool:
+        """Returns whether any EMF model is available for the machine.
+
+        A machine is considered able to produce EMF calculations if it has
+        either a magnetization curve or a fully specified analytic model.
+        """
+        return self.has_magnetization_curve() or self.has_analytic_model()
 
     def induced_emf(self) -> float:
         """Calculates induced emf E using the analytic model E = K * flux * speed_rpm.
