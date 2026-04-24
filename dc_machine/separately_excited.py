@@ -4,22 +4,25 @@ from .utils import rpm_to_rad_s
 
 
 class SeparatelyExcitedMotorGenerator(DCMachine):
-    """Separately excited (motor/generator): field current is externally controlled.
+    """Separately excited DC motor/generator with externally supplied field current.
 
-    It is required to provide the shunt winding resistance.
+    This machine requires ``shunt_resistance`` to model the field winding supplied
+    by an external DC source. The armature circuit may also include optional brush
+    drop and optional compensating resistance.
 
-    Optional:
-        Series winding resistance in ohms.
-        Brush drop voltage Vb in volts.
+    ``compensating_resistance`` models the resistance of a compensating or
+    auxiliary winding placed in series with the armature path. It is distinct
+    from ``series_resistance``, which is reserved for series-field topology
+    modeling.
 
     EMF model used in this class:
-        - Preferred: magnetization curve E = f(If) scaled by speed.
-        - Fallback: E = K * flux * speed_rpm.
-        - T = (E * Ia) / omega, with omega = rpm_to_rad_s(speed_rpm)
+        - Preferred: magnetization curve ``E = f(If)`` scaled by speed.
+        - Fallback: ``E = K * flux * speed_rpm``.
+        - Torque: ``T = (E * Ia) / omega``, with ``omega = rpm_to_rad_s(speed_rpm)``.
 
     Assumptions kept for now:
-    - No armature reaction
-    - Constant flux (externally controlled field)
+        - no armature reaction
+        - constant flux under the configured excitation model
     """
 
     def __init__(
@@ -51,6 +54,13 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         )
 
     def validate_resistance(self) -> None:
+        """Validates the winding resistances required for a separately excited machine.
+
+        A separately excited machine must provide ``shunt_resistance`` because the
+        externally supplied field current is computed from the field-circuit
+        relation ``If = Vf / Rf``. Therefore, the shunt-field resistance must be
+        configured and strictly positive.
+        """
         if self.shunt_resistance is None:
             raise ValueError("Separately excited machine requires shunt_resistance in ohms.")
         elif self.shunt_resistance <= 0:
@@ -133,8 +143,8 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             The armature current in amps depending the machine operating mode (motor or generator).
 
         Note:
-            In implementation, the armature-path resistance is ``Ra + Ri`` when a
-            compensating resistance is configured.
+            The textbook form uses ``Ra``. In implementation, the armature-path
+            resistance is ``Ra + Ri`` when a compensating resistance is configured.
         """
         armature_path_resistance = self._armature_path_resistance()
         brush_drop_voltage = self._brush_drop_value()
@@ -162,8 +172,8 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             Terminal voltage in volts.
 
         Note:
-            In implementation, the armature-path resistance is ``Ra + Ri`` when a
-            compensating resistance is configured.
+            The textbook form uses ``Ra``. In implementation, the armature-path
+            resistance is ``Ra + Ri`` when a compensating resistance is configured.
         """
         armature_path_resistance = self._armature_path_resistance()
         brush_drop_voltage = self._brush_drop_value()
@@ -188,8 +198,8 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             Terminal voltage in volts.
 
         Note:
-            In implementation, the armature-path resistance is ``Ra + Ri`` when a
-            compensating resistance is configured.
+            The textbook form uses ``Ra``. In implementation, the armature-path
+            resistance is ``Ra + Ri`` when a compensating resistance is configured.
         """
         armature_path_resistance = self._armature_path_resistance()
         brush_drop_voltage = self._brush_drop_value()
@@ -272,8 +282,8 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             Shaft speed in rpm.
 
         Note:
-            In implementation, the armature-path resistance is ``Ra + Ri`` when a
-            compensating resistance is configured.
+            The textbook form uses ``Ra``. In implementation, the armature-path
+            resistance is ``Ra + Ri`` when a compensating resistance is configured.
         """
         k_phi = self.k_constant * self.flux
         if k_phi == 0:
@@ -363,8 +373,8 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             ValueError: if the OCC gives zero reference emf for the given field current.
 
         Note:
-            In implementation, the armature-path resistance is ``Ra + Ri`` when a
-            compensating resistance is configured.
+            The textbook form uses ``Ra``. In implementation, the armature-path
+            resistance is ``Ra + Ri`` when a compensating resistance is configured.
         """
         if not self.has_magnetization_curve():
             raise ValueError("shaft_speed_rpm_from_field_current requires a magnetization curve.")

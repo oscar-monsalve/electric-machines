@@ -8,6 +8,12 @@ class DCMachine(ABC):
     Stores common electrical and operating data shared by DC motor/generator
     models and defines the abstract interface implemented by specific
     topologies.
+
+    The base class also stores optional armature-path modifiers such as brush
+    drop and compensating resistance. Compensating resistance represents a
+    compensating or auxiliary winding modeled in series with the armature path,
+    and is distinct from ``series_resistance``, which is reserved for
+    series-field topology modeling.
     """
 
     VALID_MODES = ("motor", "generator")
