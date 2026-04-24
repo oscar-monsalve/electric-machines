@@ -39,6 +39,7 @@ def valid_kwargs() -> dict:
         "operation_mode": "motor",
         "shunt_resistance": None,
         "series_resistance": None,
+        "compensating_resistance": None,
         "brush_drop_voltage": None,
     }
 
@@ -58,8 +59,32 @@ def test_constructor_accepts_valid_inputs():
     assert m.k_constant == 1.0
     assert m.operation_mode == "motor"
     assert m.brush_drop_voltage is None
+    assert m.compensating_resistance is None
+    assert m._armature_path_resistance() == 2.0
     assert m._brush_drop_value() == 0.0
 
+
+@pytest.mark.parametrize("value", [0.0, -0.1])
+def test_constructor_rejects_invalid_compensating_resistance(value):
+    kwargs = valid_kwargs()
+    kwargs["compensating_resistance"] = value
+
+    with pytest.raises(ValueError, match="compensating resistance"):
+        DummyDCMachine(**kwargs)
+
+
+def test_constructor_accepts_positive_compensating_resistance():
+    kwargs = valid_kwargs()
+    kwargs["compensating_resistance"] = 0.5
+
+    m = DummyDCMachine(**kwargs)
+
+    assert m.compensating_resistance == 0.5
+    assert m._armature_path_resistance() == 2.5
+
+def test_armature_path_resistance_equals_armature_resistance_when_no_compensating_resistance():
+    m = DummyDCMachine(**valid_kwargs())
+    assert m._armature_path_resistance() == pytest.approx(2.0)
 
 # Use pytest.mark.parametrize to avoid repetitive test functions and ensure consistent coverage.
 @pytest.mark.parametrize(
