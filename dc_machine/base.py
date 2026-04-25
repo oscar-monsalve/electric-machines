@@ -14,6 +14,10 @@ class DCMachine(ABC):
     compensating or auxiliary winding modeled in series with the armature path,
     and is distinct from ``series_resistance``, which is reserved for
     series-field topology modeling.
+
+    Optional constant-loss terms such as mechanical, core, and miscellaneous
+    losses are also stored here so efficiency and power-flow calculations can
+    reuse a common representation across machine types.
     """
 
     VALID_MODES = ("motor", "generator")
@@ -31,6 +35,9 @@ class DCMachine(ABC):
         series_resistance: float | None = None,
         compensating_resistance: float | None = None,
         brush_drop_voltage: float | None = None,
+        mechanical_losses: float | None = None,
+        core_losses: float | None = None,
+        miscellaneous_losses: float | None = None,
     ) -> None:
 
         if armature_resistance <= 0:
@@ -44,7 +51,13 @@ class DCMachine(ABC):
         if compensating_resistance is not None and compensating_resistance <= 0:
             raise ValueError("The compensating resistance, in ohms, must be positive and non-zero.")
         if brush_drop_voltage is not None and brush_drop_voltage < 0:
-            raise ValueError("The brush drop voltage must be >= 0.")
+            raise ValueError("The brush drop voltage must be positive.")
+        if mechanical_losses is not None and mechanical_losses < 0:
+            raise ValueError("Mechanical losses, in watts, must be positive.")
+        if core_losses is not None and core_losses < 0:
+            raise ValueError("Core losses, in watts, must be positive.")
+        if miscellaneous_losses is not None and miscellaneous_losses < 0:
+            raise ValueError("Miscellaneous losses, in watts, must be positive.")
 
         self.armature_resistance = armature_resistance
         self.nominal_voltage = nominal_voltage
@@ -57,6 +70,9 @@ class DCMachine(ABC):
         self.series_resistance = series_resistance
         self.compensating_resistance = compensating_resistance
         self.brush_drop_voltage = brush_drop_voltage
+        self.mechanical_losses = mechanical_losses
+        self.core_losses = core_losses
+        self.miscellaneous_losses = miscellaneous_losses
 
         self.validate_resistance()
 
@@ -88,9 +104,17 @@ class DCMachine(ABC):
             lines.append(f"{indent}{'Series resistance:':<{label_w}} {self.series_resistance} Ω")
         if self.compensating_resistance is not None:
             lines.append(f"{indent}{'Compensating resistance:':<{label_w}} {self.compensating_resistance} Ω")
+        if self.mechanical_losses is not None:
+            lines.append(f"{indent}{'Mechanical losses:':<{label_w}} {self.mechanical_losses} W")
+        if self.core_losses is not None:
+            lines.append(f"{indent}{'Core losses:':<{label_w}} {self.core_losses} W")
+        if self.miscellaneous_losses is not None:
+            lines.append(f"{indent}{'Miscellaneous losses:':<{label_w}} {self.miscellaneous_losses} W")
         lines.append(f"{indent}{'Brush drop voltage:':<{label_w}} {self._brush_drop_value()} V\n")
 
         return "\n".join(lines)
+
+    # Private methods
 
     def _armature_path_resistance(self) -> float:
         """Returns the equivalent resistance seen by the armature current.
@@ -107,8 +131,8 @@ class DCMachine(ABC):
         """
         if self.compensating_resistance is not None:
             return self.armature_resistance + self.compensating_resistance
-        else:
-            return self.armature_resistance
+
+        return self.armature_resistance
 
     def _validate_analytic_model(self) -> None:
         """Validates the analytic EMF model inputs.
@@ -141,6 +165,20 @@ class DCMachine(ABC):
         If brush drop is not configured, returns ``0.0``.
         """
         return 0.0 if self.brush_drop_voltage is None else self.brush_drop_voltage
+
+    def _mechanical_losses_value(self) -> float:
+        """Returns miscellaneous losses in watts, defaulting to ``0.0`` when omitted."""
+        return 0.0 if self.mechanical_losses is None else self.mechanical_losses
+
+    def _core_losses_value(self) -> float:
+        """Returns core losses in watts, defaulting to ``0.0`` when omitted."""
+        return 0.0 if self.core_losses is None else self.core_losses
+
+    def _miscellaneous_losses_value(self) -> float:
+        """Returns miscellaneous losses in watts, defaulting to ``0.0`` when omitted."""
+        return 0.0 if self.miscellaneous_losses is None else self.miscellaneous_losses
+
+    # Public methods
 
     def has_analytic_model(self) -> bool:
         """Returns whether the analytic EMF model is fully configured.
@@ -182,6 +220,38 @@ class DCMachine(ABC):
         """
         self._validate_analytic_model()
         return self.k_constant * self.flux * self.speed_rpm
+
+    # Shared power/loss helpers
+
+    def armature_copper_losses(self, armature_current: float) -> float:
+        """Returns armature-path copper losses in watts.
+
+        Uses the total armature-path resistance:
+
+            P_cu,arm = Ia^2 * R_a_path
+
+        where ``R_a_path = Ra + Ri`` when a compensating resistance is configured.
+        """
+        return (armature_current ** 2) * self._armature_path_resistance()
+
+    def brush_losses(self, armature_current: float) -> float:
+        """Returns brush-contact losses in watts.
+
+        Uses:
+
+            P_brush = Vb * Ia
+        """
+        return self._brush_drop_value() * armature_current
+
+    def rotational_losses(self) -> float:
+        """Returns the sum of mechanical, core, and miscellaneous losses in watts."""
+        return (
+            self._mechanical_losses_value() +
+            self._core_losses_value() +
+            self._miscellaneous_losses_value()
+        )
+
+    # Abstract methods
 
     @abstractmethod
     def validate_resistance(self) -> None:
