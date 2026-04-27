@@ -1,7 +1,6 @@
 import pytest
 from dc_machine.base import DCMachine
 
-
 # DCMachine is abstract, so it cannot be instantiated directly.
 #   - Create a concrete subclass (DummyDCMachine) that implements all abstract methods with simple placeholders.
 #   - Then it is possible to test only constructor behavior of the base class without involving real machine physics.
@@ -41,6 +40,9 @@ def valid_kwargs() -> dict:
         "series_resistance": None,
         "compensating_resistance": None,
         "brush_drop_voltage": None,
+        "mechanical_losses": None,
+        "core_losses": None,
+        "miscellaneous_losses": None,
     }
 
 
@@ -176,3 +178,27 @@ def test_constructor_accepts_positive_brush_drop():
     m = DummyDCMachine(**kwargs)
     assert m.brush_drop_voltage == 2.0
     assert m._brush_drop_value() == 2.0
+
+@pytest.mark.parametrize(
+    "field,value,error_msg",
+    [
+        ("mechanical_losses", -1.0, "Mechanical losses"),
+        ("core_losses", -1.0, "Core losses"),
+        ("miscellaneous_losses", -1.0, "Miscellaneous losses"),
+    ]
+)
+def test_constructor_rejects_negative_constant_losses(field, value, error_msg):
+    kwargs = valid_kwargs()
+    kwargs[field] = value
+    with pytest.raises(ValueError, match=error_msg):
+        DummyDCMachine(**kwargs)
+
+def test_rotational_losses_sum_optional_loss_terms():
+    kwargs = valid_kwargs()
+    kwargs["mechanical_losses"] = 100.0
+    kwargs["core_losses"] = 80.0
+    kwargs["miscellaneous_losses"] = 20.0
+
+    machine = DummyDCMachine(**kwargs)
+
+    assert machine.rotational_losses() == pytest.approx(200.0)

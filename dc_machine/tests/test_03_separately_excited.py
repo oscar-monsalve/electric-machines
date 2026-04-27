@@ -12,6 +12,9 @@ def make_machine(
     mode: str = "motor",
     compensating_resistance: float | None = None,
     brush_drop_voltage: float | None = None,
+    mechanical_losses: float | None = None,
+    core_losses: float | None = None,
+    miscellaneous_losses: float | None = None,
 ) -> SeparatelyExcitedMotorGenerator:
     return SeparatelyExcitedMotorGenerator(
         armature_resistance=2.0,
@@ -23,6 +26,9 @@ def make_machine(
         shunt_resistance=100.0,
         compensating_resistance=compensating_resistance,
         brush_drop_voltage=brush_drop_voltage,
+        mechanical_losses=mechanical_losses,
+        core_losses=core_losses,
+        miscellaneous_losses=miscellaneous_losses,
     )
 
 def make_curve() -> MagnetizationCurve:
@@ -35,6 +41,9 @@ def make_curve() -> MagnetizationCurve:
 def make_machine_with_curve(
     mode: str = "generator",
     compensating_resistance: float | None = None,
+    mechanical_losses: float | None = None,
+    core_losses: float | None = None,
+    miscellaneous_losses: float | None = None,
 ) -> SeparatelyExcitedMotorGenerator:
     return SeparatelyExcitedMotorGenerator(
         armature_resistance=2.0,
@@ -43,7 +52,10 @@ def make_machine_with_curve(
         operation_mode=mode,
         shunt_resistance=100.0,
         magnetization_curve=make_curve(),
-        compensating_resistance=compensating_resistance
+        compensating_resistance=compensating_resistance,
+        mechanical_losses=mechanical_losses,
+        core_losses=core_losses,
+        miscellaneous_losses=miscellaneous_losses,
     )
 
 def make_machine_with_analytic_model(mode: str = "generator") -> SeparatelyExcitedMotorGenerator:
@@ -159,6 +171,98 @@ def test_shaft_speed_rpm_generator_with_brush_drop():
 def test_negative_brush_drop_raises():
     with pytest.raises(ValueError):
         make_machine(brush_drop_voltage=-0.1)
+
+def test_field_input_power():
+    # If = 100 / 100 = 1 A
+    # P_field = Vf * If = 100 * 1 = 100 W
+    machine = make_machine()
+    assert machine.field_input_power(applied_field_voltage=100.0) == pytest.approx(100.0)
+
+def test_copper_losses_include_armature_and_field_losses():
+    machine = make_machine(compensating_resistance=1.0)
+
+    losses = machine.copper_losses(
+        armature_current=10.0,
+        applied_field_voltage=100.0,
+    )
+
+    # Armature path resistance = 2 + 1 = 3 ohm
+    # Armature copper loss = 10^2 * 3 = 300 W
+    # Field copper loss = 1^2 * 100 = 100 W
+    assert losses == pytest.approx(400.0)
+
+def test_efficiency_excluding_field_power_motor():
+    machine = make_machine(
+        mode="motor",
+        mechanical_losses=100.0,
+        core_losses=50.0,
+        miscellaneous_losses=25.0,
+    )
+
+    efficiency = machine.efficiency_excluding_field_power(
+        terminal_voltage=220.0,
+        armature_current=10.0,
+        induced_emf=200.0,
+    )
+
+    # P_conv = 200 * 10 = 2000 W
+    # P_rot = 100 + 50 + 25 = 175 W
+    # P_out = 1825 W
+    # P_in = 220 * 10 = 2200 W
+    expected = (1825.0 / 2200.0) * 100.0
+
+    assert efficiency == pytest.approx(expected)
+
+
+def test_overall_efficiency_generator_includes_field_power():
+    machine = make_machine(
+        mode="generator",
+        mechanical_losses=100.0,
+        core_losses=50.0,
+        miscellaneous_losses=25.0,
+    )
+
+    efficiency = machine.overall_efficiency(
+        terminal_voltage=220.0,
+        armature_current=10.0,
+        induced_emf=250.0,
+        applied_field_voltage=100.0,
+    )
+
+    # P_terminal = 220 * 10 = 2200 W
+    # P_conv = 250 * 10 = 2500 W
+    # P_rot = 175 W
+    # P_field = 100 * 1 = 100 W
+    # P_in = 2500 + 175 + 100 = 2775 W
+    expected = (2200.0 / 2775.0) * 100.0
+
+    assert efficiency == pytest.approx(expected)
+
+def test_overall_efficiency_from_field_voltage_uses_preferred_excitation_model():
+    machine = make_machine_with_curve(
+        mode="generator",
+        mechanical_losses=100.0,
+        core_losses=50.0,
+        miscellaneous_losses=25.0,
+    )
+
+    efficiency = machine.overall_efficiency_from_field_voltage(
+        terminal_voltage=30.0,
+        armature_current=10.0,
+        applied_field_voltage=100.0,
+    )
+
+    # From the OCC:
+    # If = 100 / 100 = 1 A
+    # E = 50 V at 1000 rpm
+    # P_terminal = 30 * 10 = 300 W
+    # P_conv = 50 * 10 = 500 W
+    # P_rot = 175 W
+    # P_field = 100 W
+    # P_in = 500 + 175 + 100 = 775 W
+    expected = (300.0 / 775.0) * 100.0
+
+    assert efficiency == pytest.approx(expected)
 
 # ----------------------------
 # Magnetization curve tests
