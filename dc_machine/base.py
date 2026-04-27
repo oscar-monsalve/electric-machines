@@ -51,13 +51,13 @@ class DCMachine(ABC):
         if compensating_resistance is not None and compensating_resistance <= 0:
             raise ValueError("The compensating resistance, in ohms, must be positive and non-zero.")
         if brush_drop_voltage is not None and brush_drop_voltage < 0:
-            raise ValueError("The brush drop voltage must be positive.")
+            raise ValueError("The brush drop voltage must be >= 0.")
         if mechanical_losses is not None and mechanical_losses < 0:
-            raise ValueError("Mechanical losses, in watts, must be positive.")
+            raise ValueError("Mechanical losses, in watts, must be >= 0.")
         if core_losses is not None and core_losses < 0:
-            raise ValueError("Core losses, in watts, must be positive.")
+            raise ValueError("Core losses, in watts, must be >= 0.")
         if miscellaneous_losses is not None and miscellaneous_losses < 0:
-            raise ValueError("Miscellaneous losses, in watts, must be positive.")
+            raise ValueError("Miscellaneous losses, in watts, must be >= 0.")
 
         self.armature_resistance = armature_resistance
         self.nominal_voltage = nominal_voltage
@@ -167,7 +167,7 @@ class DCMachine(ABC):
         return 0.0 if self.brush_drop_voltage is None else self.brush_drop_voltage
 
     def _mechanical_losses_value(self) -> float:
-        """Returns miscellaneous losses in watts, defaulting to ``0.0`` when omitted."""
+        """Returns mechanical losses in watts, defaulting to ``0.0`` when omitted."""
         return 0.0 if self.mechanical_losses is None else self.mechanical_losses
 
     def _core_losses_value(self) -> float:
@@ -246,10 +246,21 @@ class DCMachine(ABC):
     def rotational_losses(self) -> float:
         """Returns the sum of mechanical, core, and miscellaneous losses in watts."""
         return (
-            self._mechanical_losses_value() +
-            self._core_losses_value() +
-            self._miscellaneous_losses_value()
+            self._mechanical_losses_value() + self._core_losses_value() + self._miscellaneous_losses_value()
         )
+
+    def electromagnetic_power(self, armature_current: float, induced_emf: float) -> float:
+        """Returns electromagnetic converted (``P_conv``) power in watts.
+
+        Uses:
+
+            P_conv = E * Ia
+
+        This is the internal electromechanical conversion power. In the terminal power
+        balance, the difference between ``Vt * Ia`` and ``E * Ia`` already accounts for
+        armature-path copper losses and brush-contact losses.
+        """
+        return induced_emf * armature_current
 
     # Abstract methods
 

@@ -15,6 +15,17 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
     from ``series_resistance``, which is reserved for series-field topology
     modeling.
 
+    This class also supports power-flow and efficiency calculations. Optional
+    constant losses may be supplied through the base class as mechanical, core,
+    and miscellaneous losses. For separately excited operation, field-supply
+    power is handled explicitly through ``applied_field_voltage``.
+
+    Two efficiency views are supported:
+        - ``overall_efficiency(...)`` includes external field-supply power.
+        - ``efficiency_excluding_field_power(...)`` excludes only the field-supply
+          power, while still accounting for the other machine losses through the
+          power-flow model.
+
     EMF model used in this class:
         - Preferred: magnetization curve ``E = f(If)`` scaled by speed.
         - Fallback: ``E = K * flux * speed_rpm``.
@@ -38,6 +49,9 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         series_resistance: float | None = None,
         compensating_resistance: float | None = None,
         brush_drop_voltage: float | None = None,
+        mechanical_losses: float | None = None,
+        core_losses: float | None = None,
+        miscellaneous_losses: float | None = None,
     ) -> None:
         super().__init__(
             armature_resistance=armature_resistance,
@@ -51,6 +65,9 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             series_resistance=series_resistance,
             compensating_resistance=compensating_resistance,
             brush_drop_voltage=brush_drop_voltage,
+            mechanical_losses=mechanical_losses,
+            core_losses=core_losses,
+            miscellaneous_losses=miscellaneous_losses,
         )
 
     def validate_resistance(self) -> None:
@@ -424,4 +441,254 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             terminal_voltage=terminal_voltage,
             armature_current=armature_current,
             field_current=field_current,
+        )
+
+    # Power/losses
+
+    def field_input_power(self, applied_field_voltage: float) -> float:
+        """Returns external field-supply electrical input power in watts.
+
+        Uses:
+
+            P_field = Vf * If
+
+        where ``If = Vf / Rf`` for the separately excited field circuit.
+        """
+        return applied_field_voltage * self.field_current(applied_field_voltage)
+
+    def field_copper_losses(self, applied_field_voltage: float) -> float:
+        """Returns field copper losses in watts for the separately excited field circuit.
+
+        Uses:
+
+            If = Vf / Rf
+            P_cu,field = If^2 * Rf
+        """
+        field_current = self.field_current(applied_field_voltage)
+        return (field_current ** 2) * self.shunt_resistance
+
+    def copper_losses(
+        self,
+        armature_current: float,
+        applied_field_voltage: float | None = None
+    ) -> float:
+        """Returns total copper losses in watts.
+
+        Includes armature-path copper losses and, when ``applied_field_voltage`` is
+        provided, field copper losses for the separately excited field circuit.
+        """
+        losses = self.armature_copper_losses(armature_current)
+        if applied_field_voltage is not None:
+            losses += self.field_copper_losses(applied_field_voltage)
+        return losses
+
+    def armature_terminal_power(self, terminal_voltage: float, armature_current: float) -> float:
+        """Returns armature-side terminal electrical power in watts.
+
+        Uses:
+
+            P_t = Vt * Ia
+        """
+        return terminal_voltage * armature_current
+
+    # Efficiencies
+
+    def efficiency_excluding_field_power(
+        self,
+        terminal_voltage: float,
+        armature_current: float,
+        induced_emf: float
+    ) -> float:
+        """Returns machine efficiency in percent excluding field-supply power.
+
+        This efficiency includes the losses associated with armature conversion and
+        machine rotation, but it excludes the external field-supply power of the
+        separately excited field circuit.
+
+        Note:
+            Armature-path copper losses and brush losses are already included
+            implicitly through ``P_conv = E * Ia``. For a motor, the difference
+            between ``Vt * Ia`` and ``E * Ia`` represents those electrical losses.
+            For a generator, the difference between ``E * Ia`` and ``Vt * Ia``
+            represents those electrical losses.
+
+        Shared relations:
+            P_conv = E * Ia
+            P_rot = P_mech + P_core + P_misc
+
+        Motor:
+            P_in = Vt * Ia
+            P_out = P_conv - P_rot
+
+        Generator:
+            P_in = P_conv + P_rot
+            P_out = Vt * Ia
+
+        Args:
+            terminal_voltage: terminal voltage in volts.
+            armature_current: armature current in amps.
+            induced_emf: operating-point induced emf in volts.
+
+        Returns:
+            Efficiency excluding field-supply power, in percent.
+
+        Raises:
+            ValueError: if the input-side power is zero or negative.
+        """
+        electromagnetic_power = self.electromagnetic_power(
+            armature_current=armature_current,
+            induced_emf=induced_emf
+        )
+        terminal_power = self.armature_terminal_power(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current
+        )
+        rotational_power = self.rotational_losses()
+
+        if self.operation_mode == "motor":
+            input_power = terminal_power
+            output_power = electromagnetic_power - rotational_power
+        else:  # generator
+            input_power = electromagnetic_power + rotational_power
+            output_power = terminal_power
+
+        if input_power <= 0:
+            raise ValueError(
+                "Cannot compute efficiency excluding field power: input power must be positive and non-zero."
+            )
+
+        return (output_power / input_power) * 100.0
+
+    def overall_efficiency(
+        self,
+        terminal_voltage: float,
+        armature_current: float,
+        induced_emf: float,
+        applied_field_voltage: float
+    ) -> float:
+        """Returns overall machine efficiency in percent, including field-supply power.
+
+        This efficiency includes the external field-supply power of the separately
+        excited field circuit.
+
+        Note:
+            Armature-path copper losses and brush losses are already included
+            implicitly through ``P_conv = E * Ia``. For a motor, the difference
+            between ``Vt * Ia`` and ``E * Ia`` represents those electrical losses.
+            For a generator, the difference between ``E * Ia`` and ``Vt * Ia``
+            represents those electrical losses.
+
+        Shared relations:
+            P_conv = E * Ia
+            P_rot = P_mech + P_core + P_misc
+            P_field = Vf * If
+
+        Motor:
+            P_in = Vt * Ia + P_field
+            P_out = P_conv - P_rot
+
+        Generator:
+            P_in = P_conv + P_rot + P_field
+            P_out = Vt * Ia
+
+        Args:
+            terminal_voltage: terminal voltage in volts.
+            armature_current: armature current in amps.
+            induced_emf: operating-point induced emf in volts.
+            applied_field_voltage: external DC voltage applied to the field winding.
+
+        Returns:
+            Overall efficiency in percent.
+
+        Raises:
+            ValueError: if the input-side power is zero or negative.
+        """
+
+        electromagnetic_power = self.electromagnetic_power(
+            armature_current=armature_current,
+            induced_emf=induced_emf,
+        )
+        terminal_power = self.armature_terminal_power(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current,
+        )
+        rotational_power = self.rotational_losses()
+        field_power = self.field_input_power(applied_field_voltage)
+
+        if self.operation_mode == "motor":
+            input_power = terminal_power + field_power
+            output_power = electromagnetic_power - rotational_power
+        else:
+            input_power = electromagnetic_power + rotational_power + field_power
+            output_power = terminal_power
+
+        if input_power <= 0:
+            raise ValueError("Cannot compute overall efficiency: input power must be positive and non-zero.")
+
+        return (output_power / input_power) * 100.0
+
+    def efficiency_excluding_field_power_from_field_voltage(
+        self,
+        terminal_voltage: float,
+        armature_current: float,
+        applied_field_voltage: float,
+    ) -> float:
+        """Returns efficiency excluding field-supply power using the preferred excitation model.
+
+        This wrapper uses the same efficiency definition as
+        ``efficiency_excluding_field_power(...)``, so armature-path copper losses and
+        brush losses are accounted for implicitly through ``P_conv = E * Ia``.
+
+        Preferred order:
+            1. magnetization curve, if available.
+            2. analytic model ``E = K * flux * speed_rpm`` (fallback).
+
+        Args:
+            terminal_voltage: terminal voltage in volts.
+            armature_current: armature current in amps.
+            applied_field_voltage: external DC voltage applied to the field winding.
+
+        Returns:
+            Efficiency excluding field-supply power, in percent.
+        """
+        induced_emf = self.induced_emf_from_field_voltage(applied_field_voltage)
+        return self.efficiency_excluding_field_power(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current,
+            induced_emf=induced_emf,
+        )
+
+    def overall_efficiency_from_field_voltage(
+        self,
+        terminal_voltage: float,
+        armature_current: float,
+        applied_field_voltage: float,
+    ) -> float:
+        """Returns overall efficiency using the preferred excitation model.
+
+        This wrapper uses the same overall-efficiency definition as
+        ``overall_efficiency(...)``, so armature-path copper losses and brush losses
+        are accounted for implicitly through ``P_conv = E * Ia``.
+
+        Preferred order:
+            1. magnetization curve, if available.
+            2. analytic model ``E = K * flux * speed_rpm`` (fallback).
+
+        This method includes external field-supply power in the efficiency
+        calculation.
+
+        Args:
+            terminal_voltage: terminal voltage in volts.
+            armature_current: armature current in amps.
+            applied_field_voltage: external DC voltage applied to the field winding.
+
+        Returns:
+            Overall efficiency in percent.
+        """
+        induced_emf = self.induced_emf_from_field_voltage(applied_field_voltage)
+        return self.overall_efficiency(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current,
+            induced_emf=induced_emf,
+            applied_field_voltage=applied_field_voltage,
         )
