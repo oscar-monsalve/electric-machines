@@ -1,5 +1,5 @@
 from math import pi
-from csv import reader
+import csv
 from pathlib import Path
 
 def power_to_watts(active_power: float, unit: str) -> float:
@@ -56,6 +56,61 @@ def speed_regulation(speed_no_load: float, speed_full_load: float) -> float:
     return ((speed_no_load - speed_full_load) / speed_full_load) * 100
 
 def extract_magnetization_data_from_csv(
-    file_path: str | Path
+    file_path: str | Path,
+    field_current_column: str = "field_current",
+    emf_column: str = "emf",
 ) -> tuple[list[float], list[float]]:
-    ...
+    """Reads field current and emf data from a CSV file.
+
+    The CSV file must contain a header row with one column for the field
+    current and one column for the induced emf. By default, the expected
+    column names are "field_current" and "emf".
+
+    Args:
+        file_path: path to the CSV file.
+        field_current_column: name of the column containing the field current values, in amperes.
+        emf_column: name of the column containing the induced emf values, in volts.
+
+    Returns:
+        A tuple containing two lists:
+        1. field current values, in amperes.
+        2. induced emf values, in volts.
+
+    Raises:
+        FileNotFoundError: if the CSV file does not exist.
+        ValueError: if the CSV file is empty, if the required columns are missing,
+            or if any value cannot be converted to float.
+    """
+    file_path = Path(file_path)
+
+    if not file_path.is_file():
+        raise FileNotFoundError(f"The file does not exist: {file_path}")
+
+    field_currents: list[float] = []
+    emfs: list[float] = []
+
+    with file_path.open(mode="r", newline="", encoding="utf-8") as csv_file:
+        reader = csv.DictReader(csv_file)
+
+        if reader.fieldnames is None:
+            raise ValueError("The CSV file is empty or has no header row.")
+
+        if field_current_column not in reader.fieldnames:
+            raise ValueError(f"Missing required column: {field_current_column}")
+
+        if emf_column not in reader.fieldnames:
+            raise ValueError(f"Missing required column: {emf_column}")
+
+        for row_number, row in enumerate(reader, start=2):
+            try:
+                field_current = float(row[field_current_column])
+                emf = float(row[emf_column])
+            except ValueError as error:
+                raise ValueError(
+                    f"Invalid numeric value in row {row_number}: {row}"
+                ) from error
+
+            field_currents.append(field_current)
+            emfs.append(emf)
+
+    return field_currents, emfs
