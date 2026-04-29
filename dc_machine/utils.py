@@ -1,5 +1,6 @@
 from math import pi
-
+from csv import reader
+from pathlib import Path
 
 def power_to_watts(active_power: float, unit: str) -> float:
     """Calculates the active power in watts (W) from hp or cv.
@@ -53,3 +54,8 @@ def speed_regulation(speed_no_load: float, speed_full_load: float) -> float:
         raise ValueError("No-load speed cannot be zero.")
 
     return ((speed_no_load - speed_full_load) / speed_full_load) * 100
+
+def extract_magnetization_data_from_csv(
+    file_path: str | Path
+) -> tuple[list[float], list[float]]:
+    ...
