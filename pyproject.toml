@@ -10,7 +10,8 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "numpy",
-    "pytest"
+    "matplotlib",
+    "pytest",
 ]
 
 [tool.setuptools]
