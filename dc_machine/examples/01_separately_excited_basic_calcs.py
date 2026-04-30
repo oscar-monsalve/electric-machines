@@ -1,5 +1,6 @@
 from dc_machine.separately_excited import SeparatelyExcitedMotorGenerator
 from dc_machine.magnetization import MagnetizationCurve
+from dc_machine.utils import make_magnetization_curve
 
 
 def main() -> None:
@@ -32,21 +33,17 @@ def main() -> None:
     NOMINAL_SPEED_RPM = 1500.0
     MAG_CURVE_RPM = 1000.0
 
-    # Helper function to generate the magnetization_curve object from the MagnetizationCurve class
-    def make_magnetization_curve() -> MagnetizationCurve:
-        return MagnetizationCurve(
-            field_current_points=[0.0, 1.0, 2.0, 3.0],
-            emf_points=[10.0, 50.0, 80.0, 100.0],
-            reference_speed_rpm=MAG_CURVE_RPM,
-        )
-
     # Instantiate machine object and use custom function 'make_magnetization_curve()' to pass magnetization data.
     machine: SeparatelyExcitedMotorGenerator = SeparatelyExcitedMotorGenerator(
         armature_resistance=ARMATURE_RESISTANCE,
         nominal_voltage=NOMINAL_VOLTAGE,
         speed_rpm=NOMINAL_SPEED_RPM,
         operation_mode="generator",
-        magnetization_curve=make_magnetization_curve(),
+        magnetization_curve=make_magnetization_curve(  # Using helper function to generate the magnetization_curve object from the MagnetizationCurve class
+            field_current_points=[0.0, 1.0, 2.0, 3.0],
+            emf_points=[10.0, 50.0, 80.0, 100.0],
+            reference_speed_rpm=MAG_CURVE_RPM,
+        ),
         shunt_resistance=FIELD_RESISTANCE,
         brush_drop_voltage=BRUSH_DROP,
     )
