@@ -1,6 +1,7 @@
+from dc_machine.magnetization import MagnetizationCurve
 from math import pi
-import csv
 from pathlib import Path
+import csv
 
 def power_to_watts(active_power: float, unit: str) -> float:
     """Calculates the active power in watts (W) from hp or cv.
@@ -54,6 +55,27 @@ def speed_regulation(speed_no_load: float, speed_full_load: float) -> float:
         raise ValueError("No-load speed cannot be zero.")
 
     return ((speed_no_load - speed_full_load) / speed_full_load) * 100
+
+def make_magnetization_curve(
+    field_current_points: list[float],
+    emf_points: list[float],
+    reference_speed_rpm: float
+) -> MagnetizationCurve:
+    """Wrapper to generate the magnetization_curve object from the MagnetizationCurve class.
+
+    Args:
+        field_current_points: list containing the field current data, in amps
+        emf_points: list containing the EMF data, in volts
+        reference_speed_rpm: speed at which the magnetization curve was obatained experimentally, in rpm
+
+    Returns:
+        The MagnetizationCurve object from the class MagnetizationCurve
+    """
+    return MagnetizationCurve(
+        field_current_points=field_current_points,
+        emf_points=emf_points,
+        reference_speed_rpm=reference_speed_rpm,
+    )
 
 def extract_magnetization_data_from_csv(
     file_path: str | Path,
