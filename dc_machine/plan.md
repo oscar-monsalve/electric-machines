@@ -1,242 +1,284 @@
-# DC Machine Implementation Plan
+# Step 3 Plan: Nonlinear Analysis With Armature Reaction
 
-This document captures the agreed next steps before continuing with the full physics implementations of shunt, series, and compound DC machines.
+## Goal
 
-## Guiding Principle
+Implement a first nonlinear OCC-based armature-reaction workflow for
+`SeparatelyExcitedMotorGenerator` using a fixed demagnetizing MMF in
+ampere-turns.
 
-Keep a clear separation between:
+## Scope
 
-- structural machine data stored on the machine object
-- operating-point data used only for a specific calculation
+This first implementation will support:
 
-This keeps `DCMachine` clean and avoids mixing permanent machine parameters with temporary analysis inputs.
+- separately excited machine only
+- fixed armature-reaction MMF
+- OCC / magnetization-curve-based nonlinear analysis only
 
-## 1. Compensating Winding Resistance
+It will not support yet:
 
-Add a new optional constructor parameter to `dc_machine/base.py`:
+- load-dependent armature reaction
+- armature-reaction coefficient per ampere
+- armature-reaction curve
+- shunt, series, or compound nonlinear workflows
 
-- `compensating_resistance: float | None = None`
+## Required Data
 
-Reasoning:
+For nonlinear analysis, the user must provide:
 
-- In the intended equivalent circuit, the compensating or auxiliary winding contributes an extra resistance in series with the armature path.
-- This behavior is common to any machine connection, so it belongs in the base class.
-- It should remain distinct from `series_resistance`.
+- `magnetization_curve`
+- `field_turns`
+- `armature_reaction_mmf`
 
-Terminology decision:
+Where:
 
-- Prefer `compensating_resistance`
-- Do not reuse `series_resistance`
-- Do not use a vague name such as `auxiliary_resistance`
+- `field_turns` is the number of shunt-field turns `N_F`
+- `armature_reaction_mmf` is a fixed demagnetizing MMF in ampere-turns
 
-Validation rule:
+Important rule:
 
-- if provided, `compensating_resistance` must be positive and non-zero
+- nonlinear analysis requires OCC data
+- `magnetization_curve` remains optional for the machine in general, but it is
+  mandatory for nonlinear armature-reaction methods
 
-Implementation direction:
+## Physics Model
 
-- store it in `DCMachine`
-- add a helper such as `_armature_path_resistance() -> float`
-- define:
-  - `R_a_total = armature_resistance + compensating_resistance`
-- update armature-path equations to use `R_a_total`
+For the separately excited machine:
 
-Why this should happen first:
-
-- all future topology implementations will reuse the armature-path resistance
-- it reduces duplicated resistance handling in shunt, series, and compound machines
-
-## 2. Efficiency and Loss Modeling
-
-Efficiency support should be added soon, but not by making every loss parameter mandatory in the constructor.
-
-Recommended constructor fields:
-
-- `mechanical_losses: float | None = None`
-- `core_losses: float | None = None`
-- `misc_losses: float | None = None`
-
-Validation rule:
-
-- if provided, each loss must be non-negative
-
-Calculation rule:
-
-- omitted loss values behave as `0.0`
-
-Reasoning:
-
-- winding resistances and brush drop are structural machine parameters
-- mechanical/core/misc losses are usually modeling assumptions or operating-condition data
-- keeping them optional preserves flexibility for educational problems
-
-### Power and Loss Helpers
-
-Instead of implementing only one monolithic efficiency formula, first add reusable power-flow helpers.
-
-Recommended helpers:
-
-- `copper_losses(armature_current: float, field_current: float | None = None) -> float`
-- `brush_losses(armature_current: float) -> float`
-- `rotational_losses() -> float`
-- `electromagnetic_power(armature_current: float, induced_emf: float) -> float`
-- `input_power(...)`
-- `output_power(...)`
-
-These helpers should make the power flow explicit and reusable across machine types.
-
-### Copper Losses
-
-Common losses to include:
-
-- armature copper loss:
-  - `P_cu_arm = Ia^2 * R_a_total`
-- brush loss:
-  - `P_brush = Vb * Ia`
-- field copper loss for separately excited machines:
-  - `P_cu_field = If^2 * Rf`
-  - equivalently `P_cu_field = Vf * If`
-
-Important note:
-
-- for separately excited machines, total copper loss is not only armature copper loss
-
-### Efficiency Methods
-
-Two efficiency methods are desired:
-
-- `overall_efficiency(...)`
-- `armature_side_efficiency(...)`
-
-Interpretation:
-
-- `overall_efficiency(...)` includes the full machine balance, including field-supply power where applicable
-- `armature_side_efficiency(...)` focuses only on the armature-side conversion path
-
-This is especially important for separately excited machines.
-
-### Suggested Physics Structure
-
-For a motor:
-
-- electrical input consists of armature input and, if applicable, field input
-- electromagnetic converted power:
-  - `P_dev = E * Ia`
-- shaft output:
-  - `P_out = P_dev - P_mech - P_core - P_misc`
-
-For a generator:
-
-- shaft input is the mechanical input
-- electromagnetic converted power:
-  - `P_dev = E * Ia`
-- terminal electrical output is reduced by electrical losses
-- overall efficiency should be explicit about whether field excitation power is included
-
-## 3. Nonlinear Analysis With Armature Reaction
-
-This is the most physics-heavy addition and should be implemented after the resistance and efficiency groundwork is in place.
-
-The agreed direction is to support nonlinear OCC-based analysis without overloading the existing analytic-only API.
-
-### Core Data Needed
-
-Add field-turn information:
-
-- `field_turns: float | None = None`
-
-This will support equivalent-field-current calculations based on magnetomotive force.
-
-### Armature-Reaction Input Model
-
-Do not start with only one fixed armature-reaction value in ampere-turns unless a very simplified model is intentionally desired.
-
-Preferred design is to support one or both of these models:
-
-1. constant armature-reaction coefficient
-- `armature_reaction_at_per_a: float | None = None`
-- then:
-  - `F_ar = armature_reaction_at_per_a * Ia`
-
-2. armature-reaction curve
-- a separate object, analogous to `MagnetizationCurve`
-- maps armature current to armature-reaction mmf
-
-Reasoning:
-
-- armature reaction is normally load dependent
-- a coefficient or curve is more realistic than one fixed constructor value
-
-### Nonlinear Helper Methods
-
-Stay consistent with the current design direction:
-
-- keep existing analytic methods analytic-only
-- add explicit nonlinear or OCC-aware helper methods
-
-Candidate helpers:
-
-- `equivalent_field_current(...)`
-- `induced_emf_from_equivalent_field_current(...)`
-- `induced_emf_with_armature_reaction(...)`
-- `terminal_voltage_from_field_voltage_with_armature_reaction(...)`
-
-### Separately Excited Generator Workflow
-
-For a separately excited generator, the intended nonlinear workflow is:
-
-1. compute actual field current `If`
-2. compute field mmf:
+1. compute actual field current:
+   - `If = Vf / Rf`
+2. compute field MMF:
    - `F_field = N_F * If`
-3. compute armature-reaction mmf from load:
-   - `F_ar`
-4. compute net mmf:
+3. use the user-supplied demagnetizing MMF:
+   - `F_ar = armature_reaction_mmf`
+4. compute net MMF:
    - `F_net = F_field - F_ar`
 5. compute equivalent field current:
    - `If* = F_net / N_F`
-6. obtain `E_A0` from the magnetization curve at reference speed
-7. scale to actual speed using:
-   - `E_A = E_A0 * n_m / n_o`
+6. obtain induced emf from OCC at machine speed:
+   - `E_A = OCC(If*, n_m)`
 
-This matches the intended physical model and generalizes cleanly later.
+Since `MagnetizationCurve.emf_from_field_current(...)` already scales with
+speed, step 6 can reuse that directly.
 
-## Recommended Order of Implementation
+## Constructor-Level Additions
 
-Implement the next steps in this order:
+Add optional fields to `dc_machine/base.py`:
 
-1. Add common armature-path resistance support
-- add `compensating_resistance`
-- validate it
-- add `_armature_path_resistance()`
-- update separately excited equations to use total armature-path resistance
+- `field_turns: float | None = None`
+- `armature_reaction_mmf: float | None = None`
 
-2. Add loss and power-flow primitives
-- add optional constant-loss fields
-- add helpers for copper, brush, rotational, and electromagnetic power
-- add `overall_efficiency(...)`
-- add `armature_side_efficiency(...)`
+Validation:
 
-3. Add armature-reaction abstractions
-- add `field_turns`
-- decide between coefficient-only support or coefficient plus curve support
-- add explicit nonlinear helper methods
+- if provided, `field_turns > 0`
+- if provided, `armature_reaction_mmf >= 0`
 
-4. Continue with full physics implementations for shunt, series, and compound machines
+Store:
 
-## Things to Avoid
+- `self.field_turns`
+- `self.armature_reaction_mmf`
 
-- do not merge compensating-winding resistance into `series_resistance`
-- do not make all loss values mandatory constructor arguments
-- do not model armature reaction only as a fixed constant unless a simplified mode is explicitly desired
-- do not overload the existing analytic-only methods with nonlinear OCC behavior
+Update `__str__()` to show, when configured:
 
-## Summary of Agreed Decisions
+- `Field turns:`
+- `Armature reaction MMF:`
 
-- add `compensating_resistance` to the base class
-- treat it as part of the armature path, distinct from `series_resistance`
-- add reusable loss and power-flow helpers before implementing efficiency formulas only
-- support two efficiency views:
-  - `overall_efficiency(...)`
-  - `armature_side_efficiency(...)`
-- keep nonlinear armature-reaction analysis in explicit OCC-aware helpers
-- implement these foundations before the full shunt, series, and compound machine physics
+## Shared Helpers In `base.py`
+
+Add validation helpers:
+
+- `_validate_field_turns() -> None`
+- `_validate_armature_reaction_mmf() -> None`
+
+Behavior:
+
+- `_validate_field_turns()` raises if `field_turns` is missing or invalid
+- `_validate_armature_reaction_mmf()` raises if `armature_reaction_mmf` is missing or invalid
+
+Add public helper:
+
+- `armature_reaction_mmf_value() -> float`
+
+Behavior:
+
+- validates presence
+- returns the configured demagnetizing MMF in ampere-turns
+
+## Nonlinear Helpers In `separately_excited.py`
+
+Extend constructor pass-through with:
+
+- `field_turns`
+- `armature_reaction_mmf`
+
+Add these methods:
+
+### 1. `field_mmf(applied_field_voltage: float) -> float`
+
+Purpose:
+
+- compute shunt-field MMF
+
+Formula:
+
+- `F_field = N_F * If`
+
+Requires:
+
+- `field_turns`
+
+### 2. `equivalent_field_current_with_armature_reaction(applied_field_voltage: float) -> float`
+
+Purpose:
+
+- compute equivalent field current after demagnetization
+
+Formula:
+
+- `If* = (N_F * If - F_ar) / N_F`
+
+Requires:
+
+- `field_turns`
+- `armature_reaction_mmf`
+
+Error behavior:
+
+- raise `ValueError` if `F_net < 0`
+- equivalently if `If* < 0`
+
+Do not clamp to zero.
+
+### 3. `induced_emf_from_equivalent_field_current(equivalent_field_current: float) -> float`
+
+Purpose:
+
+- map equivalent field current to OCC emf at the current machine speed
+
+Requires:
+
+- `magnetization_curve`
+
+Implementation:
+
+- use `self.magnetization_curve.emf_from_field_current(..., desired_speed_rpm=self.speed_rpm)`
+
+### 4. `induced_emf_with_armature_reaction(applied_field_voltage: float) -> float`
+
+Purpose:
+
+- full nonlinear induced-emf helper for the fixed-demagnetization workflow
+
+Requires:
+
+- `magnetization_curve`
+- `field_turns`
+- `armature_reaction_mmf`
+
+Flow:
+
+1. compute equivalent field current
+2. compute emf from OCC at current speed
+
+### 5. `terminal_voltage_from_field_voltage_with_armature_reaction(armature_current: float, applied_field_voltage: float) -> float`
+
+Purpose:
+
+- nonlinear terminal-voltage helper using OCC plus fixed armature reaction
+
+Requires:
+
+- `magnetization_curve`
+- `field_turns`
+- `armature_reaction_mmf`
+
+Flow:
+
+1. compute induced emf with armature reaction
+2. reuse existing `terminal_voltage_from_emf(...)`
+
+## OCC Requirement Rule
+
+Nonlinear analysis must require OCC data.
+
+Implementation rule:
+
+- nonlinear methods raise `ValueError` if `magnetization_curve is None`
+
+Suggested error message:
+
+- `ValueError("Nonlinear armature-reaction analysis requires a magnetization curve.")`
+
+## API Rule
+
+Do not change the meaning of the current linear / analytic methods.
+
+Keep unchanged:
+
+- `induced_emf_from_field_voltage(...)`
+- `terminal_voltage_from_field_voltage(...)`
+- other existing analytic-only methods
+
+Add separate explicit nonlinear helpers instead.
+
+## Docstrings To Update
+
+### `DCMachine`
+
+Mention optional:
+
+- `field_turns`
+- `armature_reaction_mmf`
+
+and that they are intended for nonlinear OCC workflows.
+
+### `SeparatelyExcitedMotorGenerator`
+
+Mention that nonlinear OCC analysis is available only when:
+
+- `magnetization_curve`
+- `field_turns`
+- `armature_reaction_mmf`
+
+are configured.
+
+### New nonlinear helper methods
+
+Each docstring should state:
+
+- units
+- physical meaning
+- required configuration
+- whether OCC data is required
+
+## Minimal Tests Later
+
+Keep them lean.
+
+### `test_01_base_constructor.py`
+
+Add:
+
+1. reject `field_turns <= 0`
+2. reject negative `armature_reaction_mmf`
+
+### `test_03_separately_excited.py`
+
+Add only the essentials:
+
+1. `field_mmf(...)`
+2. `equivalent_field_current_with_armature_reaction(...)`
+3. `induced_emf_with_armature_reaction(...)`
+4. `terminal_voltage_from_field_voltage_with_armature_reaction(...)`
+5. one missing-OCC error test
+6. one negative-net-MMF / negative-equivalent-field-current error test
+
+## Suggested Implementation Order
+
+1. add `field_turns` and `armature_reaction_mmf` to `DCMachine`
+2. add validation and `__str__()` support
+3. add base validation helpers
+4. extend `SeparatelyExcitedMotorGenerator.__init__`
+5. add nonlinear MMF and equivalent-field-current helpers
+6. add nonlinear OCC EMF helper
+7. add nonlinear terminal-voltage helper
+8. add minimal tests
