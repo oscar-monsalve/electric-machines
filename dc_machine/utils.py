@@ -3,11 +3,11 @@ from math import pi
 from pathlib import Path
 import csv
 
-def power_to_watts(active_power: float, unit: str) -> float:
+def power_to_watts(active_power: float, from_unit: str) -> float:
     """Calculates the active power in watts (W) from hp or cv.
     Args:
         active_power: power in horse power (hp).
-        unit: either "watts", or "hp", or "cv".
+        from_unit: unit to convert from. Either "watts", or "hp", or "cv".
 
     Returns:
         The active power in watts (W) from horse power (hp) or CV.
@@ -16,7 +16,7 @@ def power_to_watts(active_power: float, unit: str) -> float:
     ONE_CV_IN_WATTS = 735.5
     valid_units: list(str) = ("watts", "hp", "cv")
 
-    match unit:
+    match from_unit:
         case "watts":
             return active_power
         case "hp":
