@@ -1,5 +1,4 @@
 from dc_machine.separately_excited import SeparatelyExcitedMotorGenerator
-from dc_machine.magnetization import MagnetizationCurve
 from dc_machine.utils import make_magnetization_curve
 
 
@@ -33,13 +32,13 @@ def main() -> None:
     NOMINAL_SPEED_RPM = 1500.0
     MAG_CURVE_RPM = 1000.0
 
-    # Instantiate machine object and use custom function 'make_magnetization_curve()' to pass magnetization data.
+    # Build the machine with OCC data so the example can use the public excitation helpers.
     machine: SeparatelyExcitedMotorGenerator = SeparatelyExcitedMotorGenerator(
         armature_resistance=ARMATURE_RESISTANCE,
         nominal_voltage=NOMINAL_VOLTAGE,
         speed_rpm=NOMINAL_SPEED_RPM,
         operation_mode="generator",
-        magnetization_curve=make_magnetization_curve(  # Using helper function to generate the magnetization_curve object from the MagnetizationCurve class
+        magnetization_curve=make_magnetization_curve(
             field_current_points=[0.0, 1.0, 2.0, 3.0],
             emf_points=[10.0, 50.0, 80.0, 100.0],
             reference_speed_rpm=MAG_CURVE_RPM,
@@ -49,16 +48,15 @@ def main() -> None:
     )
 
     # Part (a)
+    # Direct field-circuit calculation plus OCC-based emf calculation.
     field_current_part_a = machine.field_current(applied_field_voltage=100.0)
     emf_part_a = machine.induced_emf_from_field_voltage(applied_field_voltage=100.0)
-    assert field_current_part_a == 1.0
 
     # Part (b)
-    field_current_part_b = machine.magnetization_curve.field_current_from_emf(
-        emf=75.0,
-        desired_speed_rpm=NOMINAL_SPEED_RPM
-    )
+    # Inverse OCC use: first obtain the required field voltage, then recover the
+    # corresponding field current through the machine API.
     field_voltage_part_b = machine.field_voltage_from_emf(emf=75.0)
+    field_current_part_b = machine.field_current(applied_field_voltage=field_voltage_part_b)
 
     # Part (c)
     armature_current_part_c = machine.armature_current(terminal_voltage=60.0, induced_emf=emf_part_a)
@@ -77,7 +75,7 @@ def main() -> None:
     print(f"    Field current: {field_current_part_a:.2f} A.")
     print(f"    EMF: {emf_part_a:.2f} V.")
 
-    print("b). Field winding parameters to generatate 75 V internally at 1500 rpm:")
+    print("b) The field current and the field voltage required to generate 75 V internally at 1500 rpm:")
     print(f"    Field current: {field_current_part_b:.2f} A.")
     print(f"    Field voltage: {field_voltage_part_b:.2f} V.")
 
@@ -85,7 +83,7 @@ def main() -> None:
     print(f"    Armature current: {armature_current_part_c:.2f} A.")
 
     print("d) For the operating condition in part (c), determine the induced torque:")
-    print(f"    Induced torque: {induced_torque_part_d:.2f} Nm.")
+    print(f"    Induced torque: {induced_torque_part_d:.2f} N·m.")
 
 
 if __name__ == "__main__":
