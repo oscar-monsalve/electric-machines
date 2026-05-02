@@ -224,6 +224,36 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         brush_drop_voltage = self._brush_drop_value()
         return (self._current_sign() * (terminal_voltage - induced_emf) - brush_drop_voltage) / armature_path_resistance
 
+    def induced_emf_from_terminal_conditions(
+        self,
+        terminal_voltage: float,
+        armature_current: float,
+    ) -> float:
+        """Returns the operating-point induced emf from terminal conditions.
+
+        Electrical equation:
+            Motor:     E = Vt - Ia*Ra - Vb
+            Generator: E = Vt + Ia*Ra + Vb
+
+        Args:
+            terminal_voltage: terminal voltage in volts.
+            armature_current: armature current in amps.
+
+        Returns:
+            Induced emf in volts.
+
+        Note:
+            The textbook form uses ``Ra``. In implementation, the armature-path
+            resistance is ``Ra + Ri`` when a compensating resistance is configured.
+        """
+        armature_path_resistance = self._armature_path_resistance()
+        brush_drop_voltage = self._brush_drop_value()
+
+        if self.operation_mode == "motor":
+            return terminal_voltage - (armature_current * armature_path_resistance) - brush_drop_voltage
+
+        return terminal_voltage + (armature_current * armature_path_resistance) + brush_drop_voltage
+
     def terminal_voltage(self, armature_current: float) -> float:
         """Returns terminal voltage using the analytic EMF model only.
 
@@ -371,12 +401,10 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         if k_phi == 0:
             raise ValueError("k_constant * flux must be non-zero.")
 
-        armature_path_resistance = self._armature_path_resistance()
-        brush_drop_voltage = self._brush_drop_value()
-        if self.operation_mode == "motor":
-            emf = terminal_voltage - (armature_current * armature_path_resistance) - brush_drop_voltage
-        else:
-            emf = terminal_voltage + (armature_current * armature_path_resistance) + brush_drop_voltage
+        emf = self.induced_emf_from_terminal_conditions(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current,
+        )
 
         return emf / k_phi
 
@@ -473,12 +501,10 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         if not self.has_magnetization_curve():
             raise ValueError("shaft_speed_rpm_from_field_current requires a magnetization curve.")
 
-        armature_path_resistance = self._armature_path_resistance()
-        brush_drop_voltage = self._brush_drop_value()
-        if self.operation_mode == "motor":
-            required_emf = terminal_voltage - (armature_current * armature_path_resistance) - brush_drop_voltage
-        else:
-            required_emf = terminal_voltage + (armature_current * armature_path_resistance) + brush_drop_voltage
+        required_emf = self.induced_emf_from_terminal_conditions(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current,
+        )
 
         reference_speed_rpm = self.magnetization_curve.reference_speed_rpm
         emf_at_reference_speed = self.magnetization_curve.emf_from_field_current(
@@ -666,6 +692,108 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         """
         return terminal_voltage * armature_current
 
+    def input_power(
+        self,
+        terminal_voltage: float,
+        armature_current: float,
+        induced_emf: float,
+        applied_field_voltage: float | None = None,
+        field_adjusting_resistance: float = 0.0,
+        include_field_power: bool = True
+    ) -> float:
+        """Returns machine input power in watts for the current operating mode.
+
+        For a motor:
+            P_in = Vt * Ia
+
+        For a generator:
+            P_in = P_conv + P_rot
+
+        If ``include_field_power`` is ``True`` and ``applied_field_voltage`` is
+        provided, the external field-supply power is also included.
+
+        Args:
+            terminal_voltage: terminal voltage in volts.
+            armature_current: armature current in amps.
+            induced_emf: operating-point induced emf in volts.
+            applied_field_voltage: external DC voltage applied to the field winding.
+            field_adjusting_resistance: external field-adjusting resistance in ohms.
+            include_field_power: whether to include external field-supply power.
+
+        Returns:
+            Input power in watts.
+        """
+        electromagnetic_power = self.electromagnetic_power(
+            armature_current=armature_current,
+            induced_emf=induced_emf,
+        )
+        terminal_power = self.armature_terminal_power(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current,
+        )
+        rotational_power = self.rotational_losses()
+
+        if self.operation_mode == "motor":
+            input_power = terminal_power
+        else:  # generator
+            input_power = electromagnetic_power + rotational_power
+
+        if include_field_power and applied_field_voltage is not None:
+            input_power += self.field_input_power(
+                applied_field_voltage=applied_field_voltage,
+                field_adjusting_resistance=field_adjusting_resistance,
+            )
+
+        return input_power
+
+    def output_power(
+        self,
+        terminal_voltage: float,
+        armature_current: float,
+        induced_emf: float,
+        applied_field_voltage: float | None = None,
+        field_adjusting_resistance: float = 0.0,
+        include_field_power: bool = True,
+    ) -> float:
+        """Returns machine output power in watts for the current operating mode.
+
+        For a motor:
+            P_out = P_conv - P_rot
+
+        For a generator:
+            P_out = Vt * Ia
+
+        If ``include_field_power`` is ``True``, generator output remains the terminal
+        electrical output, while field-supply power is accounted for on the input side.
+        Therefore, this flag only affects the interpretation of the paired
+        ``input_power(...)`` method, not the returned generator terminal output.
+
+        Args:
+            terminal_voltage: terminal voltage in volts.
+            armature_current: armature current in amps.
+            induced_emf: operating-point induced emf in volts.
+            applied_field_voltage: external DC voltage applied to the field winding.
+            field_adjusting_resistance: external field-adjusting resistance in ohms.
+            include_field_power: retained for API symmetry with ``input_power(...)``.
+
+        Returns:
+            Output power in watts.
+        """
+        electromagnetic_power = self.electromagnetic_power(
+            armature_current=armature_current,
+            induced_emf=induced_emf,
+        )
+        terminal_power = self.armature_terminal_power(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current,
+        )
+        rotational_power = self.rotational_losses()
+
+        if self.operation_mode == "motor":
+            return electromagnetic_power - rotational_power
+
+        return terminal_power
+
     # Efficiencies
 
     def efficiency_excluding_field_power(
@@ -687,18 +815,6 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             For a generator, the difference between ``E * Ia`` and ``Vt * Ia``
             represents those electrical losses.
 
-        Shared relations:
-            P_conv = E * Ia
-            P_rot = P_mech + P_core + P_misc
-
-        Motor:
-            P_in = Vt * Ia
-            P_out = P_conv - P_rot
-
-        Generator:
-            P_in = P_conv + P_rot
-            P_out = Vt * Ia
-
         Args:
             terminal_voltage: terminal voltage in volts.
             armature_current: armature current in amps.
@@ -710,22 +826,18 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         Raises:
             ValueError: if the input-side power is zero or negative.
         """
-        electromagnetic_power = self.electromagnetic_power(
-            armature_current=armature_current,
-            induced_emf=induced_emf
-        )
-        terminal_power = self.armature_terminal_power(
+        input_power = self.input_power(
             terminal_voltage=terminal_voltage,
-            armature_current=armature_current
+            armature_current=armature_current,
+            induced_emf=induced_emf,
+            include_field_power=False,
         )
-        rotational_power = self.rotational_losses()
-
-        if self.operation_mode == "motor":
-            input_power = terminal_power
-            output_power = electromagnetic_power - rotational_power
-        else:  # generator
-            input_power = electromagnetic_power + rotational_power
-            output_power = terminal_power
+        output_power = self.output_power(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current,
+            induced_emf=induced_emf,
+            include_field_power=False,
+        )
 
         if input_power <= 0:
             raise ValueError(
@@ -745,9 +857,7 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         """Returns overall machine efficiency in percent, including field-supply power.
 
         This efficiency includes the external field-supply power of the separately
-        excited field circuit. When an external field-adjusting resistor is present,
-        its dissipation is already included implicitly through the field input power
-        term ``P_field = Vf * If``.
+        excited field circuit.
 
         Note:
             Armature-path copper losses and brush losses are already included
@@ -755,19 +865,6 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             between ``Vt * Ia`` and ``E * Ia`` represents those electrical losses.
             For a generator, the difference between ``E * Ia`` and ``Vt * Ia``
             represents those electrical losses.
-
-        Shared relations:
-            P_conv = E * Ia
-            P_rot = P_mech + P_core + P_misc
-            P_field = Vf * If
-
-        Motor:
-            P_in = Vt * Ia + P_field
-            P_out = P_conv - P_rot
-
-        Generator:
-            P_in = P_conv + P_rot + P_field
-            P_out = Vt * Ia
 
         Args:
             terminal_voltage: terminal voltage in volts.
@@ -782,30 +879,27 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         Raises:
             ValueError: if the input-side power is zero or negative.
         """
-
-        electromagnetic_power = self.electromagnetic_power(
-            armature_current=armature_current,
-            induced_emf=induced_emf,
-        )
-        terminal_power = self.armature_terminal_power(
+        input_power = self.input_power(
             terminal_voltage=terminal_voltage,
             armature_current=armature_current,
-        )
-        rotational_power = self.rotational_losses()
-        field_power = self.field_input_power(
+            induced_emf=induced_emf,
             applied_field_voltage=applied_field_voltage,
-            field_adjusting_resistance=field_adjusting_resistance
+            field_adjusting_resistance=field_adjusting_resistance,
+            include_field_power=True,
         )
-
-        if self.operation_mode == "motor":
-            input_power = terminal_power + field_power
-            output_power = electromagnetic_power - rotational_power
-        else:
-            input_power = electromagnetic_power + rotational_power + field_power
-            output_power = terminal_power
+        output_power = self.output_power(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current,
+            induced_emf=induced_emf,
+            applied_field_voltage=applied_field_voltage,
+            field_adjusting_resistance=field_adjusting_resistance,
+            include_field_power=True,
+        )
 
         if input_power <= 0:
-            raise ValueError("Cannot compute overall efficiency: input power must be positive and non-zero.")
+            raise ValueError(
+                "Cannot compute overall efficiency: input power must be positive and non-zero."
+            )
 
         return (output_power / input_power) * 100.0
 
@@ -818,16 +912,14 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
     ) -> float:
         """Returns efficiency excluding field-supply power using the preferred excitation model.
 
-        This wrapper uses the same efficiency definition as
-        ``efficiency_excluding_field_power(...)``, so armature-path copper losses and
-        brush losses are accounted for implicitly through ``P_conv = E * Ia``.
+        This is a convenience wrapper around ``efficiency_excluding_field_power(...)``.
+        It first computes the operating-point induced emf from the applied field voltage,
+        including any external field-adjusting resistance, and then evaluates the
+        efficiency.
 
         Preferred order:
             1. magnetization curve, if available.
             2. analytic model ``E = K * flux * speed_rpm`` (fallback).
-
-        When an external field-adjusting resistor is present, the excitation current is
-        computed from the total field-circuit resistance ``Rf + R_adj``.
 
         Args:
             terminal_voltage: terminal voltage in volts.
@@ -858,17 +950,17 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
     ) -> float:
         """Returns overall efficiency using the preferred excitation model.
 
-        This wrapper uses the same overall-efficiency definition as
-        ``overall_efficiency(...)``, so armature-path copper losses and brush losses
-        are accounted for implicitly through ``P_conv = E * Ia``.
+        This is a convenience wrapper around ``overall_efficiency(...)``. It first
+        computes the operating-point induced emf from the applied field voltage,
+        including any external field-adjusting resistance, and then evaluates the
+        overall efficiency.
 
         Preferred order:
             1. magnetization curve, if available.
             2. analytic model ``E = K * flux * speed_rpm`` (fallback).
 
         This method includes external field-supply power in the efficiency
-        calculation. When an external field-adjusting resistor is present, its
-        dissipation is included implicitly through the field input power term.
+        calculation.
 
         Args:
             terminal_voltage: terminal voltage in volts.
