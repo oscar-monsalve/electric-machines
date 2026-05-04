@@ -15,6 +15,8 @@ def make_machine(
     mechanical_losses: float | None = None,
     core_losses: float | None = None,
     miscellaneous_losses: float | None = None,
+    field_turns: float | None = None,
+    armature_reaction_mmf: float | None = None,
 ) -> SeparatelyExcitedMotorGenerator:
     return SeparatelyExcitedMotorGenerator(
         armature_resistance=2.0,
@@ -29,8 +31,9 @@ def make_machine(
         mechanical_losses=mechanical_losses,
         core_losses=core_losses,
         miscellaneous_losses=miscellaneous_losses,
+        field_turns=field_turns,
+        armature_reaction_mmf=armature_reaction_mmf,
     )
-
 
 def make_curve() -> MagnetizationCurve:
     return MagnetizationCurve(
@@ -39,13 +42,14 @@ def make_curve() -> MagnetizationCurve:
         reference_speed_rpm=1000.0,
     )
 
-
 def make_machine_with_curve(
     mode: str = "generator",
     compensating_resistance: float | None = None,
     mechanical_losses: float | None = None,
     core_losses: float | None = None,
     miscellaneous_losses: float | None = None,
+    field_turns: float | None = None,
+    armature_reaction_mmf: float | None = None,
 ) -> SeparatelyExcitedMotorGenerator:
     return SeparatelyExcitedMotorGenerator(
         armature_resistance=2.0,
@@ -58,8 +62,9 @@ def make_machine_with_curve(
         mechanical_losses=mechanical_losses,
         core_losses=core_losses,
         miscellaneous_losses=miscellaneous_losses,
+        field_turns=field_turns,
+        armature_reaction_mmf=armature_reaction_mmf,
     )
-
 
 def make_machine_with_analytic_model(mode: str = "generator") -> SeparatelyExcitedMotorGenerator:
     return SeparatelyExcitedMotorGenerator(
@@ -72,7 +77,6 @@ def make_machine_with_analytic_model(mode: str = "generator") -> SeparatelyExcit
         k_constant=1.0,
     )
 
-
 def make_machine_without_emf_model(mode: str = "generator") -> SeparatelyExcitedMotorGenerator:
     return SeparatelyExcitedMotorGenerator(
         armature_resistance=2.0,
@@ -81,7 +85,6 @@ def make_machine_without_emf_model(mode: str = "generator") -> SeparatelyExcited
         operation_mode=mode,
         shunt_resistance=100.0,
     )
-
 
 # ----------------------------
 # Analytic model tests
@@ -92,22 +95,18 @@ def test_field_current():
     external_dc_field_voltage = 100.0
     assert m.field_current(external_dc_field_voltage) == pytest.approx(1.0)
 
-
 def test_field_circuit_resistance_includes_adjusting_resistance():
     machine = make_machine()
     assert machine.field_circuit_resistance(field_adjusting_resistance=25.0) == pytest.approx(125.0)
-
 
 def test_field_current_uses_adjusting_resistance():
     machine = make_machine()
     assert machine.field_current(applied_field_voltage=100.0, field_adjusting_resistance=100.0) == pytest.approx(0.5)
 
-
 def test_field_circuit_resistance_rejects_negative_adjusting_resistance():
     machine = make_machine()
     with pytest.raises(ValueError, match="field-adjusting resistance"):
         machine.field_circuit_resistance(field_adjusting_resistance=-0.1)
-
 
 def test_armature_current_motor_uses_compensating_resistance():
     # Ra + Ri = 2 + 1 = 3
@@ -116,7 +115,6 @@ def test_armature_current_motor_uses_compensating_resistance():
     ia = m.armature_current(terminal_voltage=220.0, induced_emf=160.0)
     assert ia == pytest.approx(20.0)
 
-
 def test_terminal_voltage_generator_uses_compensating_resistance():
     # E = 1500
     # R_a_path = 3
@@ -124,7 +122,6 @@ def test_terminal_voltage_generator_uses_compensating_resistance():
     m = make_machine(mode="generator", brush_drop_voltage=2.0, compensating_resistance=1.0)
     vt = m.terminal_voltage(armature_current=10.0)
     assert vt == pytest.approx(1468.0)
-
 
 def test_terminal_voltage_from_emf_motor_uses_compensating_resistance():
     # Vt = 150 + 10*3 + 2 = 182
@@ -135,7 +132,6 @@ def test_terminal_voltage_from_emf_motor_uses_compensating_resistance():
     )
     assert vt == pytest.approx(182.0)
 
-
 def test_shaft_speed_rpm_motor_uses_compensating_resistance():
     # E = 220 - 10*3 - 2 = 188
     # K*flux = 1
@@ -143,13 +139,11 @@ def test_shaft_speed_rpm_motor_uses_compensating_resistance():
     n = m.shaft_speed_rpm(terminal_voltage=220.0, armature_current=10.0)
     assert n == pytest.approx(188.0)
 
-
 def test_armature_current_motor_without_brush_drop():
     m = make_machine(mode="motor", brush_drop_voltage=None)
     # Ia = (Vt - E - Vb)/Ra = (220 - 1500 - 0)/2 = -640
     ia = m.armature_current(terminal_voltage=220, induced_emf=1500)
     assert ia == pytest.approx(-640.0)
-
 
 def test_armature_current_motor_with_brush_drop():
     m = make_machine(mode="motor", brush_drop_voltage=2.0)
@@ -157,20 +151,17 @@ def test_armature_current_motor_with_brush_drop():
     ia = m.armature_current(terminal_voltage=220.0, induced_emf=1500.0)
     assert ia == pytest.approx(-641.0)
 
-
 def test_armature_current_generator_with_brush_drop():
     m = make_machine(mode="generator", brush_drop_voltage=2.0)
     # Ia = (E - Vt - Vb)/Ra = (1500 - 220 - 2)/2 = 639
     ia = m.armature_current(terminal_voltage=220.0, induced_emf=1500.0)
     assert ia == pytest.approx(639.0)
 
-
 def test_terminal_voltage_motor_with_brush_drop():
     m = make_machine(mode="motor", brush_drop_voltage=2.0)
     # Vt = Vnom - Ia*Ra - Vb = 220 - 10*2 - 2 = 198
     vt = m.terminal_voltage(armature_current=10.0)
     assert vt == pytest.approx(198.0)
-
 
 def test_terminal_voltage_generator_with_brush_drop():
     m = make_machine(mode="generator", brush_drop_voltage=2.0)
@@ -179,13 +170,11 @@ def test_terminal_voltage_generator_with_brush_drop():
     vt = m.terminal_voltage(armature_current=10.0)
     assert vt == pytest.approx(1478.0)
 
-
 def test_induced_torque():
     m = make_machine(mode="motor")
     ia = 10.0
     expected = (m.induced_emf() * ia) / rpm_to_rad_s(m.speed_rpm)
     assert m.induced_torque(ia) == pytest.approx(expected)
-
 
 def test_shaft_speed_rpm_motor_with_brush_drop():
     m = make_machine(mode="motor", brush_drop_voltage=2.0)
@@ -193,18 +182,15 @@ def test_shaft_speed_rpm_motor_with_brush_drop():
     n = m.shaft_speed_rpm(terminal_voltage=220.0, armature_current=10.0)
     assert n == pytest.approx(198.0)
 
-
 def test_shaft_speed_rpm_generator_with_brush_drop():
     m = make_machine(mode="generator", brush_drop_voltage=2.0)
     # n = (Vt + Ia*Ra + Vb)/(K*flux)
     n = m.shaft_speed_rpm(terminal_voltage=220.0, armature_current=10.0)
     assert n == pytest.approx(242.0)
 
-
 def test_negative_brush_drop_raises():
     with pytest.raises(ValueError):
         make_machine(brush_drop_voltage=-0.1)
-
 
 def test_field_input_power():
     # If = 100 / 100 = 1 A
@@ -212,12 +198,10 @@ def test_field_input_power():
     machine = make_machine()
     assert machine.field_input_power(applied_field_voltage=100.0) == pytest.approx(100.0)
 
-
 def test_field_voltage_from_emf_includes_adjusting_resistance():
     machine = make_machine_with_curve()
     field_voltage = machine.field_voltage_from_emf(emf=50.0, field_adjusting_resistance=100.0)
     assert field_voltage == pytest.approx(200.0)
-
 
 def test_copper_losses_include_armature_and_field_losses():
     machine = make_machine(compensating_resistance=1.0)
@@ -232,7 +216,6 @@ def test_copper_losses_include_armature_and_field_losses():
     # Field copper loss = 1^2 * 100 = 100 W
     assert losses == pytest.approx(400.0)
 
-
 def test_field_adjusting_resistor_losses_use_field_circuit_current():
     machine = make_machine()
 
@@ -245,7 +228,6 @@ def test_field_adjusting_resistor_losses_use_field_circuit_current():
     # P_Radj = 0.5^2 * 100 = 25 W
     assert losses == pytest.approx(25.0)
 
-
 def test_induced_emf_from_terminal_conditions_motor_uses_brush_drop():
     machine = make_machine(mode="motor", brush_drop_voltage=2.0, compensating_resistance=1.0)
     induced_emf = machine.induced_emf_from_terminal_conditions(
@@ -255,7 +237,6 @@ def test_induced_emf_from_terminal_conditions_motor_uses_brush_drop():
 
     # E = 220 - 10*(2 + 1) - 2 = 188 V
     assert induced_emf == pytest.approx(188.0)
-
 
 def test_efficiency_excluding_field_power_motor():
     machine = make_machine(
@@ -278,7 +259,6 @@ def test_efficiency_excluding_field_power_motor():
     expected = (1825.0 / 2200.0) * 100.0
 
     assert efficiency == pytest.approx(expected)
-
 
 def test_overall_efficiency_generator_includes_field_power():
     machine = make_machine(
@@ -304,7 +284,6 @@ def test_overall_efficiency_generator_includes_field_power():
 
     assert efficiency == pytest.approx(expected)
 
-
 def test_input_power_motor_includes_field_power_with_adjusting_resistance():
     machine = make_machine(mode="motor", mechanical_losses=100.0, core_losses=50.0, miscellaneous_losses=25.0)
 
@@ -322,7 +301,6 @@ def test_input_power_motor_includes_field_power_with_adjusting_resistance():
     # P_field = 100 * 0.5 = 50 W
     assert input_power == pytest.approx(2250.0)
 
-
 def test_output_power_motor_subtracts_rotational_losses():
     machine = make_machine(mode="motor", mechanical_losses=100.0, core_losses=50.0, miscellaneous_losses=25.0)
 
@@ -334,7 +312,6 @@ def test_output_power_motor_subtracts_rotational_losses():
 
     # P_conv = 2000 W, P_rot = 175 W
     assert output_power == pytest.approx(1825.0)
-
 
 def test_overall_efficiency_from_field_voltage_uses_preferred_excitation_model():
     machine = make_machine_with_curve(
@@ -362,7 +339,6 @@ def test_overall_efficiency_from_field_voltage_uses_preferred_excitation_model()
 
     assert efficiency == pytest.approx(expected)
 
-
 # ----------------------------
 # Magnetization curve tests
 # ----------------------------
@@ -382,12 +358,10 @@ def test_shaft_speed_rpm_from_field_current_uses_compensating_resistance():
 
     assert speed == pytest.approx(1800.0)
 
-
 def test_induced_emf_from_field_voltage_uses_magnetization_curve():
     machine = make_machine_with_curve()
     emf = machine.induced_emf_from_field_voltage(applied_field_voltage=100.0)
     assert emf == pytest.approx(50.0)
-
 
 def test_induced_emf_from_field_voltage_scales_curve_with_speed():
     machine = SeparatelyExcitedMotorGenerator(
@@ -401,12 +375,10 @@ def test_induced_emf_from_field_voltage_scales_curve_with_speed():
     emf = machine.induced_emf_from_field_voltage(applied_field_voltage=100.0)
     assert emf == pytest.approx(100.0)
 
-
 def test_induced_emf_from_field_voltage_falls_back_to_analytic_model():
     machine = make_machine_with_analytic_model()
     emf = machine.induced_emf_from_field_voltage(applied_field_voltage=100.0)
     assert emf == pytest.approx(machine.induced_emf())
-
 
 def test_induced_emf_from_field_voltage_prefers_curve_over_analytic_model():
     machine = SeparatelyExcitedMotorGenerator(
@@ -422,12 +394,21 @@ def test_induced_emf_from_field_voltage_prefers_curve_over_analytic_model():
     emf = machine.induced_emf_from_field_voltage(applied_field_voltage=100.0)
     assert emf == pytest.approx(50.0)
 
-
 def test_induced_emf_from_field_voltage_raises_without_any_emf_model():
     machine = make_machine_without_emf_model()
     with pytest.raises(ValueError, match="provide either magnetization_curve or both flux and k_constant"):
         machine.induced_emf_from_field_voltage(applied_field_voltage=100.0)
 
+
+def test_induced_emf_from_field_voltage_uses_desired_speed_override():
+    machine = make_machine_with_curve()
+
+    emf = machine.induced_emf_from_field_voltage(
+        applied_field_voltage=100.0,
+        desired_speed_rpm=2000.0,
+    )
+
+    assert emf == pytest.approx(100.0)
 
 def test_field_voltage_from_emf_uses_magnetization_curve_inverse():
     machine = make_machine_with_curve()
@@ -435,11 +416,20 @@ def test_field_voltage_from_emf_uses_magnetization_curve_inverse():
     assert field_voltage == pytest.approx(100.0)
 
 
+def test_field_voltage_from_emf_uses_desired_speed_override():
+    machine = make_machine_with_curve()
+
+    field_voltage = machine.field_voltage_from_emf(
+        emf=100.0,
+        desired_speed_rpm=2000.0,
+    )
+
+    assert field_voltage == pytest.approx(100.0)
+
 def test_field_voltage_from_emf_raises_without_magnetization_curve():
     machine = make_machine_with_analytic_model()
     with pytest.raises(ValueError, match="requires a magnetization curve"):
         machine.field_voltage_from_emf(emf=50.0)
-
 
 def test_terminal_voltage_from_emf_generator_uses_operating_point_emf():
     machine = make_machine_with_curve(mode="generator")
@@ -448,7 +438,6 @@ def test_terminal_voltage_from_emf_generator_uses_operating_point_emf():
         induced_emf=50.0,
     )
     assert vt == pytest.approx(30.0)
-
 
 def test_terminal_voltage_from_field_voltage_uses_magnetization_curve():
     machine = make_machine_with_curve(mode="generator")
@@ -459,6 +448,18 @@ def test_terminal_voltage_from_field_voltage_uses_magnetization_curve():
     assert vt == pytest.approx(30.0)
 
 
+def test_terminal_voltage_from_field_voltage_uses_desired_speed_override():
+    machine = make_machine_with_curve(mode="generator")
+
+    vt = machine.terminal_voltage_from_field_voltage(
+        armature_current=10.0,
+        applied_field_voltage=100.0,
+        desired_speed_rpm=2000.0,
+    )
+
+    # E = 100 V at 2000 rpm, so Vt = 100 - 10*2 = 80 V
+    assert vt == pytest.approx(80.0)
+
 def test_terminal_voltage_from_field_voltage_falls_back_to_analytic_model():
     machine = make_machine_with_analytic_model(mode="generator")
     vt = machine.terminal_voltage_from_field_voltage(
@@ -467,7 +468,6 @@ def test_terminal_voltage_from_field_voltage_falls_back_to_analytic_model():
     )
     expected = machine.induced_emf() - (10.0 * machine.armature_resistance)
     assert vt == pytest.approx(expected)
-
 
 def test_induced_torque_from_emf_uses_operating_point_emf():
     machine = make_machine_with_curve()
@@ -480,7 +480,6 @@ def test_induced_torque_from_emf_uses_operating_point_emf():
         induced_emf=induced_emf,
     ) == pytest.approx(expected)
 
-
 def test_induced_torque_from_field_voltage_falls_back_to_analytic_model():
     machine = make_machine_with_analytic_model()
     ia = 10.0
@@ -490,7 +489,6 @@ def test_induced_torque_from_field_voltage_falls_back_to_analytic_model():
         armature_current=ia,
         applied_field_voltage=100.0,
     ) == pytest.approx(expected)
-
 
 def test_induced_torque_from_field_voltage_uses_magnetization_curve():
     machine = make_machine_with_curve()
@@ -504,6 +502,70 @@ def test_induced_torque_from_field_voltage_uses_magnetization_curve():
     ) == pytest.approx(expected)
 
 
+def test_induced_torque_from_field_voltage_uses_desired_speed_override_for_omega():
+    machine = make_machine_with_curve()
+    ia = 10.0
+    desired_speed_rpm = 2000.0
+    expected_emf = 100.0
+    expected_torque = (expected_emf * ia) / rpm_to_rad_s(desired_speed_rpm)
+
+    assert machine.induced_torque_from_field_voltage(
+        armature_current=ia,
+        applied_field_voltage=100.0,
+        desired_speed_rpm=desired_speed_rpm,
+    ) == pytest.approx(expected_torque)
+
+
+def test_efficiency_excluding_field_power_from_field_voltage_uses_desired_speed_override():
+    machine = make_machine_with_curve(
+        mode="generator",
+        mechanical_losses=100.0,
+        core_losses=50.0,
+        miscellaneous_losses=25.0,
+    )
+
+    efficiency = machine.efficiency_excluding_field_power_from_field_voltage(
+        terminal_voltage=30.0,
+        armature_current=10.0,
+        applied_field_voltage=100.0,
+        desired_speed_rpm=2000.0,
+    )
+
+    # If = 1 A, E = 100 V at 2000 rpm
+    # P_terminal = 30 * 10 = 300 W
+    # P_conv = 100 * 10 = 1000 W
+    # P_rot = 175 W
+    # P_in(excluding field power) = 1000 + 175 = 1175 W
+    expected = (300.0 / 1175.0) * 100.0
+
+    assert efficiency == pytest.approx(expected)
+
+
+def test_overall_efficiency_from_field_voltage_uses_desired_speed_override():
+    machine = make_machine_with_curve(
+        mode="generator",
+        mechanical_losses=100.0,
+        core_losses=50.0,
+        miscellaneous_losses=25.0,
+    )
+
+    efficiency = machine.overall_efficiency_from_field_voltage(
+        terminal_voltage=30.0,
+        armature_current=10.0,
+        applied_field_voltage=100.0,
+        desired_speed_rpm=2000.0,
+    )
+
+    # If = 1 A, E = 100 V at 2000 rpm
+    # P_terminal = 30 * 10 = 300 W
+    # P_conv = 100 * 10 = 1000 W
+    # P_rot = 175 W
+    # P_field = 100 W
+    # P_in = 1000 + 175 + 100 = 1275 W
+    expected = (300.0 / 1275.0) * 100.0
+
+    assert efficiency == pytest.approx(expected)
+
 def test_shaft_speed_rpm_from_field_current_uses_magnetization_curve_generator():
     machine = make_machine_with_curve(mode="generator")
     # E = Vt + Ia*Ra + Vb = 60 + 10*2 + 0 = 80 V
@@ -515,7 +577,6 @@ def test_shaft_speed_rpm_from_field_current_uses_magnetization_curve_generator()
     # At If=1.0 A, reference EMF is 50 V at 1000 rpm, so speed = 80 * 1000 / 50 = 1600 rpm
     assert speed == pytest.approx(1600.0)
 
-
 def test_shaft_speed_rpm_from_field_current_raises_without_magnetization_curve():
     machine = make_machine_with_analytic_model()
     with pytest.raises(ValueError, match="requires a magnetization curve"):
@@ -524,7 +585,6 @@ def test_shaft_speed_rpm_from_field_current_raises_without_magnetization_curve()
             armature_current=10.0,
             field_current=1.0,
         )
-
 
 def test_shaft_speed_rpm_from_field_voltage_uses_magnetization_curve_generator():
     machine = make_machine_with_curve(mode="generator")
@@ -537,7 +597,6 @@ def test_shaft_speed_rpm_from_field_voltage_uses_magnetization_curve_generator()
 
     assert speed == pytest.approx(1600.0)
 
-
 def test_shaft_speed_rpm_from_field_voltage_raises_without_magnetization_curve():
     machine = make_machine_with_analytic_model()
 
@@ -547,3 +606,175 @@ def test_shaft_speed_rpm_from_field_voltage_raises_without_magnetization_curve()
             armature_current=10.0,
             applied_field_voltage=100.0,
         )
+
+# ----------------------------
+# Nonlinear armature-reaction tests
+# ----------------------------
+
+def test_field_mmf_uses_field_turns_and_field_current():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    mmf = machine.field_mmf(applied_field_voltage=100.0)
+
+    # If = 100 / 100 = 1 A
+    # F_field = 1000 * 1 = 1000 A-turns
+    assert mmf == pytest.approx(1000.0)
+
+def test_equivalent_field_current_with_armature_reaction_subtracts_demagnetizing_mmf():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    equivalent_field_current = machine.equivalent_field_current_with_armature_reaction(
+        applied_field_voltage=100.0,
+    )
+
+    # F_field = 1000 A-turns, F_ar = 200 A-turns
+    # If* = (1000 - 200) / 1000 = 0.8 A
+    assert equivalent_field_current == pytest.approx(0.8)
+
+def test_induced_emf_with_armature_reaction_uses_equivalent_field_current():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    induced_emf = machine.induced_emf_with_armature_reaction(applied_field_voltage=100.0)
+
+    # If* = 0.8 A
+    # OCC at 1000 rpm interpolates between 10 V at 0 A and 50 V at 1 A
+    # E = 42 V
+    assert induced_emf == pytest.approx(42.0)
+
+
+def test_induced_emf_with_armature_reaction_uses_desired_speed_override():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    induced_emf = machine.induced_emf_with_armature_reaction(
+        applied_field_voltage=100.0,
+        desired_speed_rpm=2000.0,
+    )
+
+    assert induced_emf == pytest.approx(84.0)
+
+def test_terminal_voltage_from_field_voltage_with_armature_reaction_generator():
+    machine = make_machine_with_curve(
+        mode="generator",
+        field_turns=1000.0,
+        armature_reaction_mmf=200.0,
+    )
+
+    terminal_voltage = machine.terminal_voltage_from_field_voltage_with_armature_reaction(
+        armature_current=10.0,
+        applied_field_voltage=100.0,
+    )
+
+    # E = 42 V, Vt = E - Ia*Ra = 42 - 10*2 = 22 V
+    assert terminal_voltage == pytest.approx(22.0)
+
+
+def test_terminal_voltage_from_field_voltage_with_armature_reaction_uses_desired_speed_override():
+    machine = make_machine_with_curve(
+        mode="generator",
+        field_turns=1000.0,
+        armature_reaction_mmf=200.0,
+    )
+
+    terminal_voltage = machine.terminal_voltage_from_field_voltage_with_armature_reaction(
+        armature_current=10.0,
+        applied_field_voltage=100.0,
+        desired_speed_rpm=2000.0,
+    )
+
+    # E = 84 V at 2000 rpm, so Vt = 84 - 10*2 = 64 V
+    assert terminal_voltage == pytest.approx(64.0)
+
+def test_equivalent_field_current_from_emf_uses_inverse_occ():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    equivalent_field_current = machine.equivalent_field_current_from_emf(emf=42.0)
+
+    assert equivalent_field_current == pytest.approx(0.8)
+
+
+def test_equivalent_field_current_from_emf_uses_desired_speed_override():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    equivalent_field_current = machine.equivalent_field_current_from_emf(
+        emf=84.0,
+        desired_speed_rpm=2000.0,
+    )
+
+    assert equivalent_field_current == pytest.approx(0.8)
+
+def test_field_current_required_for_emf_with_armature_reaction_adds_back_armature_reaction():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    field_current = machine.field_current_required_for_emf_with_armature_reaction(emf=42.0)
+
+    # If* = 0.8 A, F_ar / N_F = 200 / 1000 = 0.2 A
+    # If = 0.8 + 0.2 = 1.0 A
+    assert field_current == pytest.approx(1.0)
+
+
+def test_field_current_required_for_emf_with_armature_reaction_uses_desired_speed_override():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    field_current = machine.field_current_required_for_emf_with_armature_reaction(
+        emf=84.0,
+        desired_speed_rpm=2000.0,
+    )
+
+    assert field_current == pytest.approx(1.0)
+
+def test_field_adjusting_resistance_required_for_field_current_solves_series_field_resistance():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    field_adjusting_resistance = machine.field_adjusting_resistance_required_for_field_current(
+        applied_field_voltage=200.0,
+        field_current=1.0,
+    )
+
+    # R_adj = 200 / 1 - 100 = 100 ohm
+    assert field_adjusting_resistance == pytest.approx(100.0)
+
+def test_field_adjusting_resistance_required_for_emf_with_armature_reaction_restores_target_emf():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    field_adjusting_resistance = machine.field_adjusting_resistance_required_for_emf_with_armature_reaction(
+        emf=42.0,
+        applied_field_voltage=200.0,
+    )
+
+    assert field_adjusting_resistance == pytest.approx(100.0)
+
+
+def test_field_adjusting_resistance_required_for_emf_with_armature_reaction_uses_desired_speed_override():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    field_adjusting_resistance = machine.field_adjusting_resistance_required_for_emf_with_armature_reaction(
+        emf=84.0,
+        applied_field_voltage=200.0,
+        desired_speed_rpm=2000.0,
+    )
+
+    assert field_adjusting_resistance == pytest.approx(100.0)
+
+
+def test_field_voltage_required_for_emf_with_armature_reaction_uses_desired_speed_override():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    field_voltage = machine.field_voltage_required_for_emf_with_armature_reaction(
+        emf=84.0,
+        field_adjusting_resistance=100.0,
+        desired_speed_rpm=2000.0,
+    )
+
+    assert field_voltage == pytest.approx(200.0)
+
+def test_nonlinear_induced_emf_requires_magnetization_curve():
+    machine = make_machine(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    with pytest.raises(ValueError, match="requires a magnetization curve"):
+        machine.induced_emf_with_armature_reaction(applied_field_voltage=100.0)
+
+def test_equivalent_field_current_with_armature_reaction_rejects_negative_net_mmf():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=1200.0)
+
+    with pytest.raises(ValueError, match="Equivalent field current would be negative"):
+        machine.equivalent_field_current_with_armature_reaction(applied_field_voltage=100.0)

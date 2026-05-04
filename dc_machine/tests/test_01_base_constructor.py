@@ -43,6 +43,8 @@ def valid_kwargs() -> dict:
         "mechanical_losses": None,
         "core_losses": None,
         "miscellaneous_losses": None,
+        "field_turns": None,
+        "armature_reaction_mmf": None,
     }
 
 
@@ -62,6 +64,8 @@ def test_constructor_accepts_valid_inputs():
     assert m.operation_mode == "motor"
     assert m.brush_drop_voltage is None
     assert m.compensating_resistance is None
+    assert m.field_turns is None
+    assert m.armature_reaction_mmf is None
     assert m._armature_path_resistance() == 2.0
     assert m._brush_drop_value() == 0.0
 
@@ -202,3 +206,20 @@ def test_rotational_losses_sum_optional_loss_terms():
     machine = DummyDCMachine(**kwargs)
 
     assert machine.rotational_losses() == pytest.approx(200.0)
+
+
+@pytest.mark.parametrize("field_turns", [0.0, -100.0])
+def test_constructor_rejects_non_positive_field_turns(field_turns):
+    kwargs = valid_kwargs()
+    kwargs["field_turns"] = field_turns
+
+    with pytest.raises(ValueError, match="Field winding turns"):
+        DummyDCMachine(**kwargs)
+
+
+def test_constructor_rejects_negative_armature_reaction_mmf():
+    kwargs = valid_kwargs()
+    kwargs["armature_reaction_mmf"] = -1.0
+
+    with pytest.raises(ValueError, match="Armature reaction"):
+        DummyDCMachine(**kwargs)
