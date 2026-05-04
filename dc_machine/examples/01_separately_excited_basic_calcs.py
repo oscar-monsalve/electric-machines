@@ -68,9 +68,19 @@ def main() -> None:
     )
 
     # Print solutions
-    print("Solution for the following DC machine data:\n")
+    print(
+        "----------------------------\n"
+        "Machine(s) data\n"
+        "----------------------------"
+    )
+
     print(machine)
 
+    print(
+        "----------------------------\n"
+        "Solution\n"
+        "----------------------------"
+    )
     print("a) The field current and the internal generated emf when the external field supply is 100 V:")
     print(f"    Field current: {field_current_part_a:.2f} A.")
     print(f"    EMF: {emf_part_a:.2f} V.")

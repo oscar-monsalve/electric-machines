@@ -228,11 +228,23 @@ def main() -> None:
 
     print(exercise_statement)
 
+    print(
+        "----------------------------\n"
+        "Machine(s) data\n"
+        "----------------------------"
+    )
+
     print("\nDC machine (parts a to c):\n")
     print(machine_parts_a_to_c)
 
     print("DC machine (part d):\n")
     print(machine_part_d)
+
+    print(
+        "----------------------------\n"
+        "Solution\n"
+        "----------------------------"
+    )
 
     print("a) Motor's no-load speeds when R_adj = 175 Ω:")
     print(f"    a.1) n_m@V_T = 120 V : {no_load_speeds[0]:.2f} rpm")
