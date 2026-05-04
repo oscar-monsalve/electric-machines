@@ -13,6 +13,8 @@ This first implementation will support:
 - separately excited machine only
 - fixed armature-reaction MMF
 - OCC / magnetization-curve-based nonlinear analysis only
+- both forward and inverse nonlinear OCC calculations for the separately excited machine
+- voltage-restoration exercises where field current or `R_adj` must be solved
 
 It will not support yet:
 
@@ -59,6 +61,16 @@ For the separately excited machine:
 
 Since `MagnetizationCurve.emf_from_field_current(...)` already scales with
 speed, step 6 can reuse that directly.
+
+For the first version, a machine with effective compensating windings can be
+represented by setting:
+
+- `armature_reaction_mmf = 0.0`
+
+This lets the same nonlinear helper workflow cover both:
+
+- compensated operation: no demagnetizing armature reaction
+- uncompensated operation: fixed demagnetizing MMF provided explicitly
 
 ## Constructor-Level Additions
 
@@ -196,6 +208,82 @@ Flow:
 1. compute induced emf with armature reaction
 2. reuse existing `terminal_voltage_from_emf(...)`
 
+### 6. `equivalent_field_current_from_emf(emf: float) -> float`
+
+Purpose:
+
+- inverse OCC helper at the current machine speed
+- recover the equivalent field current that would produce a desired induced emf
+
+Requires:
+
+- `magnetization_curve`
+
+Implementation:
+
+- use `self.magnetization_curve.field_current_from_emf(..., desired_speed_rpm=self.speed_rpm)`
+
+### 7. `field_current_required_for_emf_with_armature_reaction(emf: float) -> float`
+
+Purpose:
+
+- determine the actual field current required to produce a desired induced emf
+- include the fixed demagnetizing armature-reaction MMF
+
+Requires:
+
+- `magnetization_curve`
+- `field_turns`
+- `armature_reaction_mmf`
+
+Flow:
+
+1. obtain equivalent field current from inverse OCC
+2. convert it back to actual field current by adding the demagnetizing MMF term
+
+Formula:
+
+- `If = If* + F_ar / N_F`
+
+### 8. `field_adjusting_resistance_required_for_field_current(applied_field_voltage: float, field_current: float) -> float`
+
+Purpose:
+
+- determine the required external field-adjusting resistance to obtain a target
+  field current from a fixed external field supply
+
+Requires:
+
+- `shunt_resistance`
+
+Formula:
+
+- `R_adj = (V_f / I_f) - R_f`
+
+Error behavior:
+
+- raise `ValueError` if `field_current <= 0`
+- raise `ValueError` if the computed `R_adj < 0`
+
+### 9. `field_adjusting_resistance_required_for_emf_with_armature_reaction(emf: float, applied_field_voltage: float) -> float`
+
+Purpose:
+
+- solve the voltage-restoration problem directly
+- determine the external field-adjusting resistance required to achieve a target
+  induced emf when armature reaction is present
+
+Requires:
+
+- `magnetization_curve`
+- `field_turns`
+- `armature_reaction_mmf`
+
+Flow:
+
+1. compute required field current for the target emf with armature reaction
+2. convert that field current to the required `R_adj`
+
 ## OCC Requirement Rule
 
 Nonlinear analysis must require OCC data.
@@ -219,6 +307,15 @@ Keep unchanged:
 - other existing analytic-only methods
 
 Add separate explicit nonlinear helpers instead.
+
+This first nonlinear implementation should be able to support a textbook-style
+generator exercise with the following structure:
+
+1. no-load terminal voltage at reduced speed with a given `R_adj`
+2. loaded terminal voltage with compensating windings
+3. loaded terminal voltage without compensating windings and with a specified fixed armature-reaction MMF
+4. conceptual voltage restoration by adjusting excitation
+5. quantitative restoration by solving required field current and required `R_adj`
 
 ## Docstrings To Update
 
@@ -269,8 +366,12 @@ Add only the essentials:
 2. `equivalent_field_current_with_armature_reaction(...)`
 3. `induced_emf_with_armature_reaction(...)`
 4. `terminal_voltage_from_field_voltage_with_armature_reaction(...)`
-5. one missing-OCC error test
-6. one negative-net-MMF / negative-equivalent-field-current error test
+5. `equivalent_field_current_from_emf(...)`
+6. `field_current_required_for_emf_with_armature_reaction(...)`
+7. `field_adjusting_resistance_required_for_field_current(...)`
+8. `field_adjusting_resistance_required_for_emf_with_armature_reaction(...)`
+9. one missing-OCC error test
+10. one negative-net-MMF / negative-equivalent-field-current error test
 
 ## Suggested Implementation Order
 
@@ -279,6 +380,28 @@ Add only the essentials:
 3. add base validation helpers
 4. extend `SeparatelyExcitedMotorGenerator.__init__`
 5. add nonlinear MMF and equivalent-field-current helpers
-6. add nonlinear OCC EMF helper
-7. add nonlinear terminal-voltage helper
-8. add minimal tests
+6. add inverse nonlinear OCC helpers for emf restoration
+7. add nonlinear OCC EMF helper
+8. add nonlinear terminal-voltage helper
+9. add field-current / `R_adj` restoration helpers
+10. add minimal tests
+
+
+### Exercise statement to add later
+
+A separately excited dc generator is rated at 172 kW, 430 V, 400 A, and 1800 r/min. A magnetization curve is available.
+This machine has the following characteristics:
+
+R_A = 0.05 ohms         V_F = 430 V
+R_F = 20 ohms           N_F = 1000 turns per pole
+R_adj = 0 to 300 ohms
+
+a) If the variable resistor R_adj in this generator's field circuit is adjusted to 63 ohms, and the genertor's prime
+mover is driving it at 1600 r/min, what is this generator's no-load terminal voltage?
+b) What would its voltage be if a 360 A load were connected to its terminals? Assume that the generator has compensating
+windings.
+c) What would its voltage be if a 360 A load were connected to its terminals but the generator does not have compensating
+windings? Assume its armature reaction at this load is 450 A-turns.
+d) What adjustment could be made to the generator to restore its terminal voltage to the value found in part a?
+e) How much field current would be needed to retore the terminal voltage to its no-load value? (Assume that the
+machine has compensating windings). What is the required value for te resistor R_adj to accomplish this?
