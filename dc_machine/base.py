@@ -18,6 +18,11 @@ class DCMachine(ABC):
     Optional constant-loss terms such as mechanical, core, and miscellaneous
     losses are also stored here so efficiency and power-flow calculations can
     reuse a common representation across machine types.
+
+    Optional nonlinear OCC workflow data such as ``field_turns`` and
+    ``armature_reaction_mmf`` may also be stored here. These values are used by
+    explicit nonlinear armature-reaction helpers and are not required for the
+    linear or analytic operating modes.
     """
 
     VALID_MODES = ("motor", "generator")
@@ -38,6 +43,8 @@ class DCMachine(ABC):
         mechanical_losses: float | None = None,
         core_losses: float | None = None,
         miscellaneous_losses: float | None = None,
+        field_turns: float | None = None,
+        armature_reaction_mmf: float | None = None
     ) -> None:
 
         if armature_resistance <= 0:
@@ -58,6 +65,10 @@ class DCMachine(ABC):
             raise ValueError("Core losses, in watts, must be >= 0.")
         if miscellaneous_losses is not None and miscellaneous_losses < 0:
             raise ValueError("Miscellaneous losses, in watts, must be >= 0.")
+        if field_turns is not None and field_turns <= 0:
+            raise ValueError("Field winding turns must be positive and non-zero.")
+        if armature_reaction_mmf is not None and armature_reaction_mmf < 0:
+            raise ValueError("Armature reaction, in ampere-turns, must be >= 0.")
 
         self.armature_resistance = armature_resistance
         self.nominal_voltage = nominal_voltage
@@ -73,6 +84,8 @@ class DCMachine(ABC):
         self.mechanical_losses = mechanical_losses
         self.core_losses = core_losses
         self.miscellaneous_losses = miscellaneous_losses
+        self.field_turns = field_turns
+        self.armature_reaction_mmf = armature_reaction_mmf
 
         self.validate_resistance()
 
@@ -110,6 +123,10 @@ class DCMachine(ABC):
             lines.append(f"{indent}{'Core losses:':<{label_w}} {self.core_losses} W")
         if self.miscellaneous_losses is not None:
             lines.append(f"{indent}{'Miscellaneous losses:':<{label_w}} {self.miscellaneous_losses} W")
+        if self.field_turns is not None:
+            lines.append(f"{indent}{'Field winding turns:':<{label_w}} {self.field_turns}")
+        if self.armature_reaction_mmf is not None:
+            lines.append(f"{indent}{'Armature reaction MMF:':<{label_w}} {self.armature_reaction_mmf} A-turns")
         lines.append(f"{indent}{'Brush drop voltage:':<{label_w}} {self._brush_drop_value()} V\n")
 
         return "\n".join(lines)
@@ -178,6 +195,16 @@ class DCMachine(ABC):
         """Returns miscellaneous losses in watts, defaulting to ``0.0`` when omitted."""
         return 0.0 if self.miscellaneous_losses is None else self.miscellaneous_losses
 
+    def _validate_field_turns(self) -> None:
+        """Validates that the number of field turns is configured and positive."""
+        if self.field_turns is None or self.field_turns <= 0:
+            raise ValueError("Nonlinear armature-reaction analysis requires field_turns.")
+
+    def _validate_armature_reaction_mmf(self) -> None:
+        """Validates that the fixed armature-reaction MMF is configured."""
+        if self.armature_reaction_mmf is None or self.armature_reaction_mmf < 0:
+            raise ValueError("Nonlinear armature-reaction analysis requires armature_reaction_mmf.")
+
     # Public methods
 
     def has_analytic_model(self) -> bool:
@@ -220,6 +247,11 @@ class DCMachine(ABC):
         """
         self._validate_analytic_model()
         return self.k_constant * self.flux * self.speed_rpm
+
+    def armature_reaction_mmf_value(self) -> float:
+        """Returns the configured demagnetizing armature-reaction MMF in ampere-turns."""
+        self._validate_armature_reaction_mmf()
+        return self.armature_reaction_mmf
 
     # Shared power/loss helpers
 
