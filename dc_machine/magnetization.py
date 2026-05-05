@@ -23,9 +23,10 @@ class MagnetizationCurve:
         for idx, field_current_point in enumerate(field_current_points[:-1]):
             if field_current_point >= field_current_points[idx + 1]:
                 raise ValueError("Field current data points must be strictly increasing.")
+
         for idx, emf_point in enumerate(emf_points[:-1]):
-            if emf_point > emf_points[idx + 1]:
-                raise ValueError("EMF data points must be non-decreasing.")
+            if emf_point >= emf_points[idx + 1]:
+                raise ValueError("EMF data points must be strictly increasing.")
 
         if reference_speed_rpm <= 0:
             raise ValueError("Reference speed, in rpm, must be positive and non-zero.")
@@ -74,6 +75,9 @@ class MagnetizationCurve:
 
         The requested emf is first converted to its equivalent value at the
         reference speed, and then the magnetization curve is inverse-interpolated.
+
+        This methods assumes a strictly increasing OCC in EMF points from the
+        magnetization curve.
 
         Interpolation is clamped at the ends of the curve:
         - below the first emf point, the first field-current value is used
