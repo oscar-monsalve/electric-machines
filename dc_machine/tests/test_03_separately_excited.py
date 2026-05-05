@@ -192,6 +192,89 @@ def test_negative_brush_drop_raises():
     with pytest.raises(ValueError):
         make_machine(brush_drop_voltage=-0.1)
 
+
+@pytest.mark.parametrize(
+    ("method_name", "kwargs"),
+    [
+        ("induced_emf_from_terminal_conditions", {"terminal_voltage": 220.0, "armature_current": -1.0}),
+        ("terminal_voltage", {"armature_current": -1.0}),
+        ("terminal_voltage_from_emf", {"armature_current": -1.0, "induced_emf": 150.0}),
+        ("induced_torque", {"armature_current": -1.0}),
+        ("induced_torque_from_emf", {"armature_current": -1.0, "induced_emf": 150.0}),
+        ("induced_torque_from_field_voltage", {"armature_current": -1.0, "applied_field_voltage": 100.0}),
+        ("copper_losses", {"armature_current": -1.0}),
+        ("armature_terminal_power", {"terminal_voltage": 220.0, "armature_current": -1.0}),
+        (
+            "input_power",
+            {"terminal_voltage": 220.0, "armature_current": -1.0, "induced_emf": 200.0},
+        ),
+        (
+            "output_power",
+            {"terminal_voltage": 220.0, "armature_current": -1.0, "induced_emf": 200.0},
+        ),
+        (
+            "efficiency_excluding_field_power",
+            {"terminal_voltage": 220.0, "armature_current": -1.0, "induced_emf": 200.0},
+        ),
+        (
+            "overall_efficiency",
+            {
+                "terminal_voltage": 220.0,
+                "armature_current": -1.0,
+                "induced_emf": 200.0,
+                "applied_field_voltage": 100.0,
+            },
+        ),
+    ],
+)
+def test_helpers_reject_negative_armature_current(method_name, kwargs):
+    machine = make_machine(mode="motor")
+
+    with pytest.raises(ValueError, match="Negative armature current"):
+        getattr(machine, method_name)(**kwargs)
+
+
+def test_terminal_voltage_from_field_voltage_rejects_negative_armature_current():
+    machine = make_machine_with_curve(mode="generator")
+
+    with pytest.raises(ValueError, match="Negative armature current"):
+        machine.terminal_voltage_from_field_voltage(
+            armature_current=-1.0,
+            applied_field_voltage=100.0,
+        )
+
+
+def test_shaft_speed_rpm_rejects_negative_armature_current():
+    machine = make_machine(mode="motor")
+
+    with pytest.raises(ValueError, match="Negative armature current"):
+        machine.shaft_speed_rpm(terminal_voltage=220.0, armature_current=-1.0)
+
+
+def test_shaft_speed_rpm_from_field_current_rejects_negative_armature_current():
+    machine = make_machine_with_curve(mode="generator")
+
+    with pytest.raises(ValueError, match="Negative armature current"):
+        machine.shaft_speed_rpm_from_field_current(
+            terminal_voltage=60.0,
+            armature_current=-1.0,
+            field_current=1.0,
+        )
+
+
+def test_terminal_voltage_from_field_voltage_with_armature_reaction_rejects_negative_armature_current():
+    machine = make_machine_with_curve(
+        mode="generator",
+        field_turns=1000.0,
+        armature_reaction_mmf=200.0,
+    )
+
+    with pytest.raises(ValueError, match="Negative armature current"):
+        machine.terminal_voltage_from_field_voltage_with_armature_reaction(
+            armature_current=-1.0,
+            applied_field_voltage=100.0,
+        )
+
 def test_field_input_power():
     # If = 100 / 100 = 1 A
     # P_field = Vf * If = 100 * 1 = 100 W

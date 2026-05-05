@@ -70,6 +70,31 @@ def test_constructor_accepts_valid_inputs():
     assert m._brush_drop_value() == 0.0
 
 
+def test_str_omits_unset_optional_brush_drop_voltage():
+    machine = DummyDCMachine(**valid_kwargs())
+
+    assert "Brush drop voltage:" not in str(machine)
+
+
+def test_str_includes_configured_brush_drop_voltage():
+    kwargs = valid_kwargs()
+    kwargs["brush_drop_voltage"] = 2.0
+
+    machine = DummyDCMachine(**kwargs)
+
+    assert "Brush drop voltage:" in str(machine)
+    assert "2.0 V" in str(machine)
+
+
+def test_brush_losses_reject_negative_armature_current():
+    kwargs = valid_kwargs()
+    kwargs["brush_drop_voltage"] = 2.0
+    machine = DummyDCMachine(**kwargs)
+
+    with pytest.raises(ValueError, match="Negative armature current"):
+        machine.brush_losses(-1.0)
+
+
 @pytest.mark.parametrize("value", [0.0, -0.1])
 def test_constructor_rejects_invalid_compensating_resistance(value):
     kwargs = valid_kwargs()

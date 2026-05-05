@@ -25,7 +25,8 @@ def test_constructor_accepts_valid_inputs():
         ([0.0, 1.0], [10.0, -20.0], "negative values for emf_points"),
         ([0.0, 1.0, 1.0], [10.0, 20.0, 30.0], "strictly increasing"),
         ([0.0, 2.0, 1.0], [10.0, 20.0, 30.0], "strictly increasing"),
-        ([0.0, 1.0, 2.0], [10.0, 30.0, 20.0], "non-decreasing"),
+        ([0.0, 1.0, 2.0], [10.0, 30.0, 20.0], "strictly increasing"),
+        ([0.0, 1.0, 2.0], [10.0, 30.0, 30.0], "strictly increasing"),
     ],
 )
 def test_constructor_rejects_invalid_curve_data(field_current_points, emf_points, error_msg):
