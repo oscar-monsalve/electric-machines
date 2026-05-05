@@ -127,7 +127,9 @@ class DCMachine(ABC):
             lines.append(f"{indent}{'Field winding turns:':<{label_w}} {self.field_turns}")
         if self.armature_reaction_mmf is not None:
             lines.append(f"{indent}{'Armature reaction MMF:':<{label_w}} {self.armature_reaction_mmf} A-turns")
-        lines.append(f"{indent}{'Brush drop voltage:':<{label_w}} {self._brush_drop_value()} V\n")
+        if self.brush_drop_voltage is not None:
+            lines.append(f"{indent}{'Brush drop voltage:':<{label_w}} {self.brush_drop_voltage} V")
+        lines.append("")
 
         return "\n".join(lines)
 
@@ -205,6 +207,13 @@ class DCMachine(ABC):
         if self.armature_reaction_mmf is None or self.armature_reaction_mmf < 0:
             raise ValueError("Nonlinear armature-reaction analysis requires armature_reaction_mmf.")
 
+    def _validate_non_negative_armature_current(self, armature_current: float) -> None:
+        """Validates that armature current is non-negative for the simplified model."""
+        if armature_current < 0:
+            raise ValueError(
+                "Negative armature current is not supported by the current simplified DC machine model."
+            )
+
     # Public methods
 
     def has_analytic_model(self) -> bool:
@@ -272,7 +281,11 @@ class DCMachine(ABC):
         Uses:
 
             P_brush = Vb * Ia
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
+        self._validate_non_negative_armature_current(armature_current)
         return self._brush_drop_value() * armature_current
 
     def rotational_losses(self) -> float:
