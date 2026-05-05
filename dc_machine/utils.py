@@ -1,4 +1,4 @@
-from dc_machine.magnetization import MagnetizationCurve
+from .magnetization import MagnetizationCurve
 from math import pi
 from pathlib import Path
 import csv
