@@ -273,10 +273,15 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         Returns:
             Induced emf in volts.
 
+        Raises:
+            ValueError: if ``armature_current`` is negative.
+
         Note:
             The textbook form uses ``Ra``. In implementation, the armature-path
             resistance is ``Ra + Ri`` when a compensating resistance is configured.
         """
+        self._validate_non_negative_armature_current(armature_current)
+
         armature_path_resistance = self._armature_path_resistance()
         brush_drop_voltage = self._brush_drop_value()
 
@@ -306,10 +311,15 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         Returns:
             Terminal voltage in volts.
 
+        Raises:
+            ValueError: if ``armature_current`` is negative.
+
         Note:
             The textbook form uses ``Ra``. In implementation, the armature-path
             resistance is ``Ra + Ri`` when a compensating resistance is configured.
         """
+        self._validate_non_negative_armature_current(armature_current)
+
         armature_path_resistance = self._armature_path_resistance()
         brush_drop_voltage = self._brush_drop_value()
 
@@ -332,10 +342,15 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         Returns:
             Terminal voltage in volts.
 
+        Raises:
+            ValueError: if ``armature_current`` is negative.
+
         Note:
             The textbook form uses ``Ra``. In implementation, the armature-path
             resistance is ``Ra + Ri`` when a compensating resistance is configured.
         """
+        self._validate_non_negative_armature_current(armature_current)
+
         armature_path_resistance = self._armature_path_resistance()
         brush_drop_voltage = self._brush_drop_value()
 
@@ -371,6 +386,9 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             Terminal voltage in volts.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
         induced_emf = self.induced_emf_from_field_voltage(
             applied_field_voltage=applied_field_voltage,
@@ -401,7 +419,12 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             The induced torque in N·m.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
+        self._validate_non_negative_armature_current(armature_current)
+
         omega = rpm_to_rad_s(self.speed_rpm)
         if omega == 0:
             raise ValueError("speed_rpm cannot be zero when computing torque.")
@@ -430,6 +453,9 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         Returns:
             Shaft speed in rpm.
 
+        Raises:
+            ValueError: if ``armature_current`` is negative.
+
         Note:
             The textbook form uses ``Ra``. In implementation, the armature-path
             resistance is ``Ra + Ri`` when a compensating resistance is configured.
@@ -437,9 +463,6 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         self._validate_analytic_model()
 
         k_phi = self.k_constant * self.flux
-
-        if k_phi == 0:
-            raise ValueError("k_constant * flux must be non-zero.")
 
         emf = self.induced_emf_from_terminal_conditions(
             terminal_voltage=terminal_voltage,
@@ -460,7 +483,12 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             The induced torque in N·m.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
+        self._validate_non_negative_armature_current(armature_current)
+
         omega = rpm_to_rad_s(self.speed_rpm)
 
         if omega == 0:
@@ -495,7 +523,12 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             The induced torque in N·m.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
+        self._validate_non_negative_armature_current(armature_current)
+
         induced_emf = self.induced_emf_from_field_voltage(
             applied_field_voltage=applied_field_voltage,
             field_adjusting_resistance=field_adjusting_resistance,
@@ -543,6 +576,7 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         Raises:
             ValueError: if no magnetization curve is available.
             ValueError: if the OCC gives zero reference emf for the given field current.
+            ValueError: if ``armature_current`` is negative.
 
         Note:
             The textbook form uses ``Ra``. In implementation, the armature-path
@@ -591,6 +625,9 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             Shaft speed in rpm.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
         field_current = self.field_current(
             applied_field_voltage=applied_field_voltage,
@@ -759,6 +796,7 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Raises:
             ValueError: if nonlinear OCC requirements are not configured.
+            ValueError: if ``armature_current`` is negative.
         """
         induced_emf = self.induced_emf_with_armature_reaction(
             applied_field_voltage=applied_field_voltage,
@@ -1035,7 +1073,12 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             Total copper losses in watts.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
+        self._validate_non_negative_armature_current(armature_current)
+
         losses = self.armature_copper_losses(armature_current)
 
         if applied_field_voltage is not None:
@@ -1058,7 +1101,11 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         Uses:
 
             P_t = Vt * Ia
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
+        self._validate_non_negative_armature_current(armature_current)
         return terminal_voltage * armature_current
 
     def input_power(
@@ -1091,7 +1138,12 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             Input power in watts.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
+        self._validate_non_negative_armature_current(armature_current)
+
         electromagnetic_power = self.electromagnetic_power(
             armature_current=armature_current,
             induced_emf=induced_emf,
@@ -1147,7 +1199,12 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             Output power in watts.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
+        self._validate_non_negative_armature_current(armature_current)
+
         electromagnetic_power = self.electromagnetic_power(
             armature_current=armature_current,
             induced_emf=induced_emf,
@@ -1193,8 +1250,11 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             Efficiency excluding field-supply power, in percent.
 
         Raises:
+            ValueError: if ``armature_current`` is negative.
             ValueError: if the input-side power is zero or negative.
         """
+        self._validate_non_negative_armature_current(armature_current)
+
         input_power = self.input_power(
             terminal_voltage=terminal_voltage,
             armature_current=armature_current,
@@ -1246,8 +1306,11 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             Overall efficiency in percent.
 
         Raises:
+            ValueError: if ``armature_current`` is negative.
             ValueError: if the input-side power is zero or negative.
         """
+        self._validate_non_negative_armature_current(armature_current)
+
         input_power = self.input_power(
             terminal_voltage=terminal_voltage,
             armature_current=armature_current,
@@ -1303,6 +1366,9 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             Efficiency excluding field-supply power, in percent.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
         induced_emf = self.induced_emf_from_field_voltage(
             applied_field_voltage=applied_field_voltage,
@@ -1350,6 +1416,9 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             Overall efficiency in percent.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
         """
         induced_emf = self.induced_emf_from_field_voltage(
             applied_field_voltage=applied_field_voltage,
