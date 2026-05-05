@@ -44,7 +44,8 @@ def main() -> None:
     ARMATURE_REACTION_MMF:    float = 450.0
 
     # Extract magnetization data from csv
-    file_path = Path("dc_machine") / "examples" / "03_mag_curve_example_03.csv"
+    examples_dir = Path(__file__).resolve().parent  # Make example CSV paths independent of current working directory
+    file_path = examples_dir / "03_mag_curve_example_03.csv"
     field_current_points, emf_points = extract_magnetization_data_from_csv(
         file_path=file_path,
         field_current_column="Shunt field current (A)",

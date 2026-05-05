@@ -65,7 +65,8 @@ def main() -> None:
     terminal_voltages = [120.0, 180.0, NOMINAL_TERMINAL_VOLTAGE]
 
     # Extract magnetization data from csv
-    file_path = Path("dc_machine") / "examples" / "02_mag_curve_example_02.csv"
+    examples_dir = Path(__file__).resolve().parent  # Make example CSV paths independent of current working directory
+    file_path = examples_dir / "02_mag_curve_example_02.csv"
     field_current_points, emf_points = extract_magnetization_data_from_csv(
         file_path=file_path,
         field_current_column="Shunt field current (A)",
