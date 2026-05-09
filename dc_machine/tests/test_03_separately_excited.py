@@ -95,6 +95,12 @@ def test_field_current():
     external_dc_field_voltage = 100.0
     assert m.field_current(external_dc_field_voltage) == pytest.approx(1.0)
 
+def test_field_current_rejects_negative_field_voltage():
+    machine = make_machine()
+
+    with pytest.raises(ValueError, match="Applied field voltage"):
+        machine.field_current(applied_field_voltage=-1.0)
+
 def test_field_circuit_resistance_includes_adjusting_resistance():
     machine = make_machine()
     assert machine.field_circuit_resistance(field_adjusting_resistance=25.0) == pytest.approx(125.0)
@@ -493,6 +499,35 @@ def test_induced_emf_from_field_voltage_uses_desired_speed_override():
 
     assert emf == pytest.approx(100.0)
 
+
+@pytest.mark.parametrize("desired_speed_rpm", [0.0, -1.0])
+def test_induced_emf_from_field_voltage_rejects_invalid_desired_speed_analytic_fallback(desired_speed_rpm):
+    machine = make_machine_with_analytic_model()
+
+    with pytest.raises(ValueError, match="speed"):
+        machine.induced_emf_from_field_voltage(
+            applied_field_voltage=100.0,
+            desired_speed_rpm=desired_speed_rpm,
+        )
+
+
+def test_induced_emf_from_field_voltage_rejects_negative_field_voltage():
+    machine = make_machine_with_analytic_model()
+
+    with pytest.raises(ValueError, match="Applied field voltage"):
+        machine.induced_emf_from_field_voltage(applied_field_voltage=-1.0)
+
+
+def test_shaft_speed_rpm_from_field_current_rejects_negative_field_current():
+    machine = make_machine_with_curve(mode="generator")
+
+    with pytest.raises(ValueError, match="Field current"):
+        machine.shaft_speed_rpm_from_field_current(
+            terminal_voltage=60.0,
+            armature_current=10.0,
+            field_current=-1.0,
+        )
+
 def test_field_voltage_from_emf_uses_magnetization_curve_inverse():
     machine = make_machine_with_curve()
     field_voltage = machine.field_voltage_from_emf(emf=50.0)
@@ -815,6 +850,16 @@ def test_field_adjusting_resistance_required_for_field_current_solves_series_fie
 
     # R_adj = 200 / 1 - 100 = 100 ohm
     assert field_adjusting_resistance == pytest.approx(100.0)
+
+
+def test_field_adjusting_resistance_required_for_field_current_rejects_negative_field_voltage():
+    machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
+
+    with pytest.raises(ValueError, match="Applied field voltage"):
+        machine.field_adjusting_resistance_required_for_field_current(
+            applied_field_voltage=-1.0,
+            field_current=1.0,
+        )
 
 def test_field_adjusting_resistance_required_for_emf_with_armature_reaction_restores_target_emf():
     machine = make_machine_with_curve(field_turns=1000.0, armature_reaction_mmf=200.0)
