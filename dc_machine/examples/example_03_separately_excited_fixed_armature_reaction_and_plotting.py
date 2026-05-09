@@ -1,9 +1,17 @@
-from dc_machine.separately_excited import SeparatelyExcitedMotorGenerator
 from pathlib import Path
+import matplotlib.pyplot as plt
+from dc_machine.plot_helpers import (
+    generator_terminal_voltage_characteristic_data,
+    generator_terminal_power_characteristic_data,
+    plot_generator_terminal_voltage_characteristic,
+    plot_generator_terminal_power_characteristic
+)
+from dc_machine.separately_excited import SeparatelyExcitedMotorGenerator
 from dc_machine.utils import (
     extract_magnetization_data_from_csv,
     make_magnetization_curve,
 )
+
 
 exercise_statement = """
 Exercise statement:
@@ -30,6 +38,10 @@ d) What adjustment could be made to the generator to restore its terminal voltag
 
 e) How much field current would be needed to retore the terminal voltage to its no-load value? (Assume that the
 machine has compensating windings). What is the required value for te resistor R_adj to accomplish this?
+
+f) Plot the generator terminal characteristics (V_T vs. I_A) for the compensated and uncompensated cases.
+
+g) Plot the generator terminal output power characteristics (P_T vs. I_A) for the compensated and uncompensated cases.
 """
 
 
@@ -168,6 +180,84 @@ def main() -> None:
         )
     )
 
+    # Part f) Plotting generator's terminal characteristics
+    step = 50
+    armature_current_sweep = [i for i in range(0, 450 + step, step)]
+
+    # Compensated (no armature reaction) terminal characteristic data
+    ia_points, vt_compensated = generator_terminal_voltage_characteristic_data(
+        machine=machine_without_armature_reaction,
+        armature_current_points=armature_current_sweep,
+        applied_field_voltage=NOMINAL_FIELD_VOLTAGE,
+        field_adjusting_resistance=FIELD_ADJUSTING_RESISTANCE_PART_A,
+        desired_speed_rpm=SPEED_PART_A,
+        include_armature_reaction=False
+    )
+
+    # Uncompensated (with armature reaction) terminal characteristic data
+    _, vt_uncompensated = generator_terminal_voltage_characteristic_data(
+        machine=machine_with_armature_reaction,
+        armature_current_points=armature_current_sweep,
+        applied_field_voltage=NOMINAL_FIELD_VOLTAGE,
+        field_adjusting_resistance=FIELD_ADJUSTING_RESISTANCE_PART_A,
+        desired_speed_rpm=SPEED_PART_A,
+        include_armature_reaction=True
+    )
+
+    # Generate voltage plot(s)
+    # Compensated
+    fig_voltage, ax_voltage = plot_generator_terminal_voltage_characteristic(
+        armature_current_points=ia_points,
+        terminal_voltage_points=vt_compensated,
+        label="With compensating windings (no armature reaction)",
+        title="Generator terminal characteristic"
+    )
+    # Uncompensated
+    plot_generator_terminal_voltage_characteristic(
+        ia_points,
+        vt_uncompensated,
+        ax=ax_voltage,
+        label="Without compensating windings (armature reaction)",
+    )
+
+    # Part g) Plotting generator's terminal output power characteristics
+
+    # Compensated (no armature reaction) terminal power characteristic data
+    _, power_compensated = generator_terminal_power_characteristic_data(
+        machine=machine_without_armature_reaction,
+        armature_current_points=armature_current_sweep,
+        applied_field_voltage=NOMINAL_FIELD_VOLTAGE,
+        field_adjusting_resistance=FIELD_ADJUSTING_RESISTANCE_PART_A,
+        desired_speed_rpm=SPEED_PART_A,
+        include_armature_reaction=False
+    )
+
+    # Uncompensated (with armature reaction) terminal power characteristic data
+    _, power_uncompensated = generator_terminal_power_characteristic_data(
+        machine=machine_with_armature_reaction,
+        armature_current_points=armature_current_sweep,
+        applied_field_voltage=NOMINAL_FIELD_VOLTAGE,
+        field_adjusting_resistance=FIELD_ADJUSTING_RESISTANCE_PART_A,
+        desired_speed_rpm=SPEED_PART_A,
+        include_armature_reaction=True
+    )
+
+    # Generate power plot(s)
+    # Compensated
+    fig_power, ax_power = plot_generator_terminal_power_characteristic(
+        armature_current_points=ia_points,
+        terminal_power_points=power_compensated,
+        label="With compensating windings (no armature reaction)",
+        title="Generator terminal power characteristic"
+    )
+    # Uncompensated
+    plot_generator_terminal_power_characteristic(
+        armature_current_points=ia_points,
+        terminal_power_points=power_uncompensated,
+        ax=ax_power,
+        label="Without compensating windings (armature reaction)",
+    )
+
     # Print solutions
 
     print(exercise_statement)
@@ -218,6 +308,10 @@ def main() -> None:
     print(f"    Required field current I_F : {required_field_current_part_e:.2f} A")
     print(f"    Required R_adj : {required_field_adjusting_resistance_part_e:.2f} ohms")
     print(f"    For a required induced emf E_A : {required_induced_emf_part_e:.2f} V")
+
+    print("\nf) and g) Generator characteristic plots were generated.")
+
+    plt.show()
 
 
 if __name__ == "__main__":

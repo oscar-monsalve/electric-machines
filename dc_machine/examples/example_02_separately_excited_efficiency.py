@@ -5,6 +5,7 @@ from dc_machine.utils import (
     make_magnetization_curve,
 )
 
+
 exercise_statement = """
 A DC motor has the following information:
 
