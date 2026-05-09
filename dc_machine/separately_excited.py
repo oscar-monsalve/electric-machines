@@ -92,6 +92,26 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         self._validate_field_turns()
         self._validate_armature_reaction_mmf()
 
+    @staticmethod
+    def _validate_non_negative_field_voltage(applied_field_voltage: float) -> None:
+        """Validates field-supply voltage for the simplified excitation model."""
+        if applied_field_voltage < 0:
+            raise ValueError("Applied field voltage must be >= 0.")
+
+    @staticmethod
+    def _validate_desired_speed_rpm(desired_speed_rpm: float) -> None:
+        """Validates an explicit operating speed override."""
+        if desired_speed_rpm <= 0:
+            raise ValueError("The machine's speed, in rpm, must be positive and non-zero.")
+
+    def _effective_speed_rpm(self, desired_speed_rpm: float | None) -> float:
+        """Returns the configured speed or a validated explicit speed override."""
+        if desired_speed_rpm is None:
+            return self.speed_rpm
+
+        self._validate_desired_speed_rpm(desired_speed_rpm)
+        return desired_speed_rpm
+
     def validate_resistance(self) -> None:
         """Validates the winding resistances required for a separately excited machine.
 
@@ -144,7 +164,12 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
 
         Returns:
             Field current in amps.
+
+        Raises:
+            ValueError: if ``applied_field_voltage`` is negative.
         """
+        self._validate_non_negative_field_voltage(applied_field_voltage)
+
         total_field_resistance = self.field_circuit_resistance(field_adjusting_resistance)
         return applied_field_voltage / total_field_resistance
 
@@ -177,7 +202,7 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         Raises:
             ValueError: if no emf model is available.
         """
-        effective_speed_rpm = self.speed_rpm if desired_speed_rpm is None else desired_speed_rpm
+        effective_speed_rpm = self._effective_speed_rpm(desired_speed_rpm)
 
         field_current = self.field_current(
             applied_field_voltage=applied_field_voltage,
@@ -225,7 +250,7 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         if not self.has_magnetization_curve():
             raise ValueError("field_voltage_from_emf requires a magnetization curve.")
 
-        effective_speed_rpm = self.speed_rpm if desired_speed_rpm is None else desired_speed_rpm
+        effective_speed_rpm = self._effective_speed_rpm(desired_speed_rpm)
 
         field_current = self.magnetization_curve.field_current_from_emf(
             emf=emf,
@@ -535,7 +560,7 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             desired_speed_rpm=desired_speed_rpm
         )
 
-        effective_speed_rpm = self.speed_rpm if desired_speed_rpm is None else desired_speed_rpm
+        effective_speed_rpm = self._effective_speed_rpm(desired_speed_rpm)
         omega = rpm_to_rad_s(effective_speed_rpm)
 
         if omega == 0:
@@ -732,7 +757,7 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         if not self.has_magnetization_curve():
             raise ValueError("Nonlinear armature-reaction analysis requires a magnetization curve.")
 
-        effective_speed_rpm = self.speed_rpm if desired_speed_rpm is None else desired_speed_rpm
+        effective_speed_rpm = self._effective_speed_rpm(desired_speed_rpm)
 
         return self.magnetization_curve.emf_from_field_current(
             field_current=equivalent_field_current,
@@ -831,7 +856,7 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
         if not self.has_magnetization_curve():
             raise ValueError("Nonlinear armature-reaction analysis requires a magnetization curve.")
 
-        effective_speed_rpm = self.speed_rpm if desired_speed_rpm is None else desired_speed_rpm
+        effective_speed_rpm = self._effective_speed_rpm(desired_speed_rpm)
 
         return self.magnetization_curve.field_current_from_emf(
             emf=emf,
@@ -889,9 +914,12 @@ class SeparatelyExcitedMotorGenerator(DCMachine):
             Required external field-adjusting resistance in ohms.
 
         Raises:
+            ValueError: if ``applied_field_voltage`` is negative.
             ValueError: if ``field_current`` is not positive.
             ValueError: if the computed resistance is negative.
         """
+        self._validate_non_negative_field_voltage(applied_field_voltage)
+
         if field_current <= 0:
             raise ValueError("Required field current must be positive and non-zero.")
 
