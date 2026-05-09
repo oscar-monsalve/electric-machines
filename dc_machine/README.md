@@ -46,7 +46,8 @@ The standard way to run code in this module is from the project root `/electric-
 ```sh
 uv run python -m dc_machine.examples.example_01_separately_excited_basic_calcs
 uv run python -m dc_machine.examples.example_02_separately_excited_efficiency
-uv run python -m dc_machine.examples.example_03_separately_excited_fixed_armature_reaction
+uv run python -m dc_machine.examples.example_03_separately_excited_fixed_armature_reaction_and_plotting
+uv run python -m dc_machine.examples.example_04_separately_excited_motor_characteristics
 ```
 
 This same convention should be used for tests:
@@ -62,7 +63,8 @@ From the project root `/electric-machines`, execute the examples:
 ```sh
 uv run python -m dc_machine.examples.example_01_separately_excited_basic_calcs
 uv run python -m dc_machine.examples.example_02_separately_excited_efficiency
-uv run python -m dc_machine.examples.example_03_separately_excited_fixed_armature_reaction
+uv run python -m dc_machine.examples.example_03_separately_excited_fixed_armature_reaction_and_plotting
+uv run python -m dc_machine.examples.example_04_separately_excited_motor_characteristics
 ```
 
 ## Testing
