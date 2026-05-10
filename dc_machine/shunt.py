@@ -3,11 +3,28 @@ from .magnetization import MagnetizationCurve
 
 
 class ShuntMotorGenerator(DCMachine):
-    """Shunt wound: field winding in parallel with armature.
+    """Shunt DC motor/generator with field winding connected across the terminals.
 
-    It is required to provide the shunt winding resistance.
+    In a shunt machine, the shunt-field branch is connected in parallel with
+    the armature terminals. Therefore the field current is set by the terminal
+    voltage and the total field-branch resistance:
 
-    It is optional to provide the series winding resistance.
+        If = Vt / (Rf + R_adj)
+
+    where:
+        Rf: shunt-field winding resistance
+        R_adj: optional external field-adjusting resistance in series with the
+            shunt-field winding
+
+    The armature current and line current are different because terminal current
+    splits between the armature branch and the shunt-field branch:
+
+        Motor:     IL = IA + If
+        Generator: IA = IL + If
+
+    This class keeps those currents explicit. Armature voltage equations use
+    armature current ``IA``. Terminal power calculations should use line current
+    ``IL``.
     """
 
     def __init__(
@@ -48,25 +65,47 @@ class ShuntMotorGenerator(DCMachine):
             armature_reaction_mmf=armature_reaction_mmf,
         )
 
+    @staticmethod
+    def _validate_non_negative_armature_voltage(terminal_voltage: float) -> None:
+        """Validates terminal voltage for the simplified shunt-machine model."""
+        if terminal_voltage < 0:
+            raise ValueError("Terminal voltage must be >= 0.")
+
     def validate_resistance(self) -> None:
+        """Validates the shunt-field resistance required by a shunt machine.
+
+        A shunt machine must provide ``shunt_resistance`` because field current
+        is computed from the shunt-field branch relation:
+
+            If = Vt / (Rf + R_adj)
+
+        The stored machine winding resistance ``Rf`` must be strictly positive.
+        The optional external adjusting resistance ``R_adj`` is supplied to
+        individual operating-point helpers and validated there.
+        """
         if self.shunt_resistance is None:
             raise ValueError("Shunt machine requires shunt_resistance in ohms.")
         elif self.shunt_resistance <= 0:
             raise ValueError("Shunt resistance must be positive and non-zero.")
 
     def field_circuit_resistance(self, field_adjusting_resistance: float = 0.0) -> float:
-        """Returns the total field-circuit resistance in ohms.
+        """Returns the total shunt-field branch resistance in ohms.
 
-        An external adjustable resistor may be connected in series with the shunt
-        field winding:
+        The shunt-field winding may have an external field-adjusting resistor
+        connected in series with it:
 
             R_field_total = Rf + R_adj
 
+        where:
+            Rf: shunt-field winding resistance
+            R_adj: external field-adjusting resistance
+
         Args:
-            field_adjusting_resistance: external field-adjusting resistance in ohms.
+            field_adjusting_resistance: external field-adjusting resistance in
+                ohms. Defaults to ``0.0``.
 
         Returns:
-            Total field-circuit resistance in ohms.
+            Total shunt-field branch resistance in ohms.
 
         Raises:
             ValueError: if ``field_adjusting_resistance`` is negative.
@@ -76,9 +115,48 @@ class ShuntMotorGenerator(DCMachine):
 
         return self.shunt_resistance + field_adjusting_resistance
 
-    def field_current(self, applied_field_voltage: float) -> float:
-        """If = Vt / Rf"""
-        raise NotImplementedError("field_current is not implemented yet for shunt machine.")
+    def field_current(
+        self,
+        applied_field_voltage: float,
+        field_adjusting_resistance: float = 0.0
+    ) -> float:
+        """Returns shunt-field current from terminal voltage.
+
+        For a shunt machine, the field branch is connected across the machine
+        terminals. Therefore the voltage applied to the field branch is the
+        terminal voltage:
+
+            If = Vt / (Rf + R_adj)
+
+        where:
+            Rf: shunt-field winding resistance
+            R_adj: optional external field-adjusting resistance in series with
+                the shunt-field winding
+
+        The parameter name ``applied_field_voltage`` is inherited from the base
+        class interface. In this subclass it should be interpreted as terminal
+        voltage across the shunt-field branch.
+
+        Args:
+            applied_field_voltage: terminal voltage across the shunt-field
+                branch, in volts.
+            field_adjusting_resistance: external field-adjusting resistance in
+                ohms. Defaults to ``0.0``.
+
+        Returns:
+            Shunt-field current in amps.
+
+        Raises:
+            ValueError: if ``applied_field_voltage`` is negative.
+            ValueError: if ``field_adjusting_resistance`` is negative.
+        """
+        self._validate_non_negative_armature_voltage(applied_field_voltage)
+
+        total_field_resistance = self.field_circuit_resistance(
+            field_adjusting_resistance=field_adjusting_resistance
+        )
+
+        return applied_field_voltage / total_field_resistance
 
     def armature_current(self, terminal_voltage: float, induced_emf: float) -> float:
         """Ia = (Vt - E) / Ra"""
