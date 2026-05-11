@@ -66,10 +66,16 @@ class ShuntMotorGenerator(DCMachine):
         )
 
     @staticmethod
-    def _validate_non_negative_armature_voltage(terminal_voltage: float) -> None:
+    def _validate_non_negative_terminal_voltage(terminal_voltage: float) -> None:
         """Validates terminal voltage for the simplified shunt-machine model."""
         if terminal_voltage < 0:
             raise ValueError("Terminal voltage must be >= 0.")
+
+    @staticmethod
+    def _validate_non_negative_line_current(line_current: float) -> None:
+        """Validates line current for the simplified shunt-machine model."""
+        if line_current < 0:
+            raise ValueError("Line current must be >= 0.")
 
     def validate_resistance(self) -> None:
         """Validates the shunt-field resistance required by a shunt machine.
@@ -150,7 +156,7 @@ class ShuntMotorGenerator(DCMachine):
             ValueError: if ``applied_field_voltage`` is negative.
             ValueError: if ``field_adjusting_resistance`` is negative.
         """
-        self._validate_non_negative_armature_voltage(applied_field_voltage)
+        self._validate_non_negative_terminal_voltage(applied_field_voltage)
 
         total_field_resistance = self.field_circuit_resistance(
             field_adjusting_resistance=field_adjusting_resistance
@@ -158,13 +164,279 @@ class ShuntMotorGenerator(DCMachine):
 
         return applied_field_voltage / total_field_resistance
 
+    def line_current_from_armature_current(
+        self,
+        terminal_voltage: float,
+        armature_current: float,
+        field_adjusting_resistance: float = 0.0
+    ) -> float:
+        """Returns line current from armature current.
+
+        In a shunt machine, terminal current splits between the armature branch
+        and the shunt-field branch.
+
+        Motor operation:
+
+            IL = IA + If
+
+        Generator operation:
+
+            IL = IA - If
+
+        where:
+
+            If = Vt / (Rf + R_adj)
+
+        Args:
+            terminal_voltage: machine terminal voltage in volts.
+            armature_current: armature current in amps.
+            field_adjusting_resistance: external field-adjusting resistance in
+                ohms. Defaults to ``0.0``.
+
+        Returns:
+            Line current in amps.
+
+        Raises:
+            ValueError: if ``terminal_voltage`` is negative.
+            ValueError: if ``armature_current`` is negative.
+            ValueError: if ``field_adjusting_resistance`` is negative.
+            ValueError: if generator operation would produce negative line current.
+        """
+        self._validate_non_negative_terminal_voltage(terminal_voltage)
+        self._validate_non_negative_armature_current(armature_current)
+
+        field_current = self.field_current(
+            applied_field_voltage=terminal_voltage,
+            field_adjusting_resistance=field_adjusting_resistance
+        )
+
+        if self.operation_mode == "motor":
+            return armature_current + field_current
+
+        line_current = armature_current - field_current
+        if line_current < 0:
+            raise ValueError(
+                "Generator line current would be negative because armature current is less than field current."
+            )
+
+        return line_current
+
+    def armature_current_from_line_current(
+        self,
+        terminal_voltage: float,
+        line_current: float,
+        field_adjusting_resistance: float = 0.0
+    ) -> float:
+        """Returns armature current from line current.
+
+        In a shunt machine, terminal current splits between the armature branch
+        and the shunt-field branch.
+
+        Motor operation:
+
+            IA = IL - If
+
+        Generator operation:
+
+            IA = IL + If
+
+        where:
+
+            If = Vt / (Rf + R_adj)
+
+        Args:
+            terminal_voltage: machine terminal voltage in volts.
+            line_current: external line current in amps.
+            field_adjusting_resistance: external field-adjusting resistance in
+                ohms. Defaults to ``0.0``.
+
+        Returns:
+            Armature current in amps.
+
+
+        Raises:
+            ValueError: if ``terminal_voltage`` is negative.
+            ValueError: if ``line_current`` is negative.
+            ValueError: if ``field_adjusting_resistance`` is negative.
+            ValueError: if motor operation would produce negative armature
+                current.
+        """
+        self._validate_non_negative_terminal_voltage(terminal_voltage)
+        self._validate_non_negative_line_current(line_current)
+
+        field_current = self.field_current(
+            applied_field_voltage=terminal_voltage,
+            field_adjusting_resistance=field_adjusting_resistance,
+        )
+
+        if self.operation_mode == "generator":
+            return line_current + field_current
+
+        armature_current = line_current - field_current
+        if armature_current < 0:
+            raise ValueError(
+                "Motor armature current would be negative because line current is less than field current."
+            )
+
+        return armature_current
+
     def armature_current(self, terminal_voltage: float, induced_emf: float) -> float:
-        """Ia = (Vt - E) / Ra"""
-        raise NotImplementedError("armature_current is not implemented yet for shunt machine.")
+        """Returns armature current from terminal voltage and induced EMF.
+
+        This method solves only the armature-branch current. It does not include
+        shunt-field current. Use ``line_current_from_armature_current(...)`` or
+        ``armature_current_from_line_current(...)`` when converting between
+        armature current and external line current.
+
+        Armature voltage equations:
+
+            Motor:     IA = (Vt - E - Vb) / R_a_path
+            Generator: IA = (E - Vt - Vb) / R_a_path
+
+        where:
+
+            R_a_path = Ra + Ri
+
+        when a compensating resistance is configured, and:
+
+            Vb = brush_drop_voltage
+
+        when brush drop is configured.
+
+        Args:
+            terminal_voltage: machine terminal voltage in volts.
+            induced_emf: internal generated EMF or motor back-EMF, in volts.
+
+        Returns:
+            Armature current in amps. The returned value may be negative if the
+            supplied terminal conditions are inconsistent with the selected
+            operating mode.
+
+        Raises:
+            ValueError: if ``terminal_voltage`` is negative.
+        """
+        self._validate_non_negative_terminal_voltage(terminal_voltage)
+
+        armature_path_resistance = self._armature_path_resistance()
+        brush_drop_voltage = self._brush_drop_value()
+
+        return (
+            (self._current_sign() * (terminal_voltage - induced_emf) - brush_drop_voltage) / armature_path_resistance
+        )
+
+    def induced_emf_from_terminal_conditions(
+        self,
+        terminal_voltage: float,
+        armature_current: float,
+    ) -> float:
+        """Returns induced EMF from terminal voltage and armature current.
+
+        This helper uses armature current, not line current. For shunt machines,
+        convert line current to armature current first when the problem gives
+        external line current.
+
+        Electrical equations:
+
+            Motor:     E = Vt - IA * R_a_path - Vb
+            Generator: E = Vt + IA * R_a_path + Vb
+
+        Args:
+            terminal_voltage: machine terminal voltage in volts.
+            armature_current: armature current in amps.
+
+        Returns:
+            Internal generated EMF or motor back-EMF, in volts.
+
+        Raises:
+            ValueError: if ``terminal_voltage`` is negative.
+            ValueError: if ``armature_current`` is negative.
+        """
+        self._validate_non_negative_terminal_voltage(terminal_voltage)
+        self._validate_non_negative_armature_current(armature_current)
+
+        armature_path_resistance = self._armature_path_resistance()
+        brush_drop_voltage = self._brush_drop_value()
+
+        if self.operation_mode == "motor":
+            return (
+                terminal_voltage - (armature_current * armature_path_resistance) - brush_drop_voltage
+            )
+        else:  # generator
+            return (
+                terminal_voltage + (armature_current * armature_path_resistance) + brush_drop_voltage
+            )
+
+    def terminal_voltage_from_emf(
+        self,
+        armature_current: float,
+        induced_emf: float,
+    ) -> float:
+        """Returns terminal voltage from armature current and induced EMF.
+
+        This helper uses armature current, not line current.
+
+        Electrical equations:
+
+            Motor:     Vt = E + IA * R_a_path + Vb
+            Generator: Vt = E - IA * R_a_path - Vb
+
+        Args:
+            armature_current: armature current in amps.
+            induced_emf: internal generated EMF or motor back-EMF, in volts.
+
+        Returns:
+            Machine terminal voltage in volts.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
+        """
+
+        self._validate_non_negative_armature_current(armature_current)
+
+        armature_path_resistance = self._armature_path_resistance()
+        brush_drop_voltage = self._brush_drop_value()
+
+        if self.operation_mode == "motor":
+            return (
+                induced_emf + (armature_current * armature_path_resistance) + brush_drop_voltage
+            )
+        else:  # generator
+            return (
+                induced_emf - (armature_current * armature_path_resistance) - brush_drop_voltage
+            )
 
     def terminal_voltage(self, armature_current: float) -> float:
-        """For motor: Vt = V - Ia*Ra | For generator: Vt = E - Ia*Ra"""
-        raise NotImplementedError("terminal_voltage is not implemented yet for shunt machine.")
+        """Returns terminal voltage using the analytic EMF model only.
+
+        This method uses armature current, not line current. If the problem gives
+        external line current, convert it first with
+        ``armature_current_from_line_current(...)``.
+
+        The induced EMF is computed from the analytic model:
+
+            E = K * flux * speed_rpm
+
+        Electrical equations:
+
+            Motor:     Vt = E + IA * R_a_path + Vb
+            Generator: Vt = E - IA * R_a_path - Vb
+
+        Args:
+            armature_current: armature current in amps.
+
+        Returns:
+            Machine terminal voltage in volts.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
+            ValueError: if the analytic EMF model is not configured.
+        """
+        self._validate_non_negative_armature_current(armature_current)
+
+        return self.terminal_voltage_from_emf(
+            armature_current=armature_current,
+            induced_emf=self.induced_emf(),
+        )
 
     def induced_torque(self, armature_current: float) -> float:
         """T = K * phi * Ia"""
