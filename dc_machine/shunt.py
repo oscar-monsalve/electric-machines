@@ -1,5 +1,6 @@
 from .base import DCMachine
 from .magnetization import MagnetizationCurve
+from .utils import rpm_to_rad_s
 
 
 class ShuntMotorGenerator(DCMachine):
@@ -439,8 +440,138 @@ class ShuntMotorGenerator(DCMachine):
         )
 
     def induced_torque(self, armature_current: float) -> float:
-        """T = K * phi * Ia"""
-        raise NotImplementedError("induced_torque is not implemented yet for shunt machine.")
+        """Returns induced torque using the analytic EMF model only.
+
+        This method uses armature current, not line current. If the problem gives
+        external line current, convert it first with
+        ``armature_current_from_line_current(...)``.
+
+        The induced EMF is computed from the analytic model:
+
+            E = K * flux * speed_rpm
+
+        Then electromagnetic torque is:
+
+            T = E * IA / omega
+
+        where:
+
+            omega = shaft speed in rad/s
+
+        Args:
+            armature_current: armature current in amps.
+
+        Returns:
+            Induced electromagnetic torque in N*m.
+
+        Raises:
+            ValueError: if ``armature_current`` is negative.
+            ValueError: if the analytic EMF model is not configured.
+        """
+        self._validate_non_negative_armature_current(armature_current)
+
+        omega = rpm_to_rad_s(self.speed_rpm)
+        if omega == 0:
+            raise ValueError("speed_rpm cannot be zero when computing torque.")
+
+        return (self.induced_emf() * armature_current) / omega
 
     def shaft_speed_rpm(self, terminal_voltage: float, armature_current: float) -> float:
-        raise NotImplementedError("shaft_speed_rpm is not implemented yet for shunt machine.")
+        """Solves shaft speed using the analytic EMF model only.
+
+        This method uses armature current, not line current. If the problem gives
+        external line current, convert it first with
+        ``armature_current_from_line_current(...)``.
+
+        Electrical equations:
+
+            Motor:     E = Vt - IA * R_a_path - Vb
+            Generator: E = Vt + IA * R_a_path + Vb
+
+        Analytic speed model:
+
+            E = K * flux * n_rpm
+
+        Therefore:
+
+            n_rpm = E / (K * flux)
+
+        Args:
+            terminal_voltage: machine terminal voltage in volts.
+            armature_current: armature current in amps.
+
+        Returns:
+            Shaft speed in rpm.
+
+        Raises:
+            ValueError: if ``terminal_voltage`` is negative.
+            ValueError: if ``armature_current`` is negative.
+            ValueError: if the analytic EMF model is not configured.
+        """
+        self._validate_analytic_model()
+
+        k_phi = self.k_constant * self.flux
+
+        induced_emf = self.induced_emf_from_terminal_conditions(
+            terminal_voltage=terminal_voltage,
+            armature_current=armature_current
+        )
+
+        return induced_emf / k_phi
+
+    # Open-circuit characteristic (OCC) methods
+
+    def induced_emf_from_terminal_voltage(
+        self,
+        terminal_voltage: float,
+        field_adjusting_resistance: float = 0.0,
+        desired_speed_rpm: float | None = None
+    ) -> float:
+        """Returns induced EMF using the OCC and shunt terminal voltage.
+
+        For a shunt machine, terminal voltage determines shunt-field current:
+
+            If = Vt / (Rf + R_adj)
+
+        The magnetization curve then gives induced EMF at the requested speed:
+
+            E = OCC(If) scaled to desired_speed_rpm
+
+        If ``desired_speed_rpm`` is omitted, the machine's configured
+        ``speed_rpm`` is used.
+
+        Args:
+            terminal_voltage: machine terminal voltage in volts.
+            field_adjusting_resistance: external field-adjusting resistance in
+                ohms. Defaults to ``0.0``.
+            desired_speed_rpm: shaft speed at which the induced EMF is desired,
+                in rpm.
+
+        Returns:
+            Induced EMF in volts.
+
+        Raises:
+            ValueError: if no magnetization curve is configured.
+            ValueError: if ``terminal_voltage`` is negative.
+            ValueError: if ``field_adjusting_resistance`` is negative.
+            ValueError: if ``desired_speed_rpm`` is not positive.
+        """
+        if not self.has_magnetization_curve():
+            raise ValueError("induced_emf_from_terminal_voltage requires a magnetization curve.")
+
+        self._validate_non_negative_terminal_voltage(terminal_voltage)
+
+        effective_speed_rpm = self._effective_speed_rpm(desired_speed_rpm)
+
+    def _effective_speed_rpm(self, desired_speed_rpm: float | None) -> float:
+        """Returns the configured speed or a validated explicit speed override."""
+        if desired_speed_rpm is None:
+            return self.speed_rpm
+
+        self._validate_desired_speed_rpm(desired_speed_rpm)
+        return desired_speed_rpm
+
+    @staticmethod
+    def _validate_desired_speed_rpm(desired_speed_rpm: float):
+        if desired_speed_rpm <= 0:
+            raise ValueError("desired_speed_rpm must be >= 0.")
