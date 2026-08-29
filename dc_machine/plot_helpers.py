@@ -547,7 +547,7 @@ def _plot_characteristic(
         raise ValueError("x_values and y_values must have the same length.")
 
     if ax is None:
-        fig, ax = plt.subplots(figsize=(7.0, 4.8))
+        fig, ax = plt.subplots(figsize=(12.0, 8.0))
     else:
         fig = ax.figure
 
